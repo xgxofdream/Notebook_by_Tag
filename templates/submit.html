@@ -1,0 +1,17 @@
+{% include "head.html" %}
+{% include "menu.html" %}
+
+
+
+<p style="font-weight: bold; text-align: center; font-size: 72px">{{ submission_result }}</p>
+<br><br>
+<p style="font-weight: bold; text-align: center; "><a href="{{ input_url }}">Please click here geting back</a></p>
+<br><br>
+<p style="font-weight: bold;">Input data check:</p>
+<p>{{ all_data }}</p>
+
+
+{% include "foot.html" %}
+<script>
+    window.setTimeout("location='{{ input_url }}'", {{ time_dalay }});
+</script>

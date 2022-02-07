@@ -1,0 +1,40 @@
+{% include "head.html" %}
+{% include "menu.html" %}
+
+
+
+Type:&nbsp
+
+    <select onchange="self.location.href=options[selectedIndex].value">
+        <option value="{{ web_url }}english/source_list/0/">All</option>
+        <option value="{{ web_url }}english/source_list/1/">Novels</option>
+        <option value="{{ web_url }}english/source_list/2/">Poems</option>
+        <option value="{{ web_url }}english/source_list/3/">Reference books</option>
+        <option value="{{ web_url }}english/source_list/4/">Autobiography</option>
+        <option value="{{ web_url }}english/source_list/5/">Diary</option>
+        <option value="{{ web_url }}english/source_list/6/">Textbook</option>
+        <option value="{{ web_url }}english/source_list/7/">Elon Mush</option>
+        <option value="{{ web_url }}english/source_list/8/">王德中Cyrus</option>
+    </select>
+
+
+<p>*****************************************************************************************************</p>
+
+<p style="font-weight: bold">>>{{ source_type }}<<</p>
+
+<p>--------------------------------------------------------------</p>
+{% for item in source %}
+
+    <p>
+        {{ item.name }}&nbsp ({{ item.author }})
+        &nbsp&nbsp@&nbsp&nbsp
+        <a href="{{ web_url }}english/list_by_source/{{ item.id }}/">查看笔记</a>
+        &nbsp&nbsp|&nbsp&nbsp
+        <a href="{{ web_url }}english/input/{{ item.id }}/">录入笔记</a>
+    </p>
+
+
+{% endfor %}
+
+
+{% include "foot.html" %}

@@ -1,0 +1,44 @@
+{% include "head.html" %}
+{% include "menu.html" %}
+
+
+
+<form name="" action="{{ web_url }}english/list_by_tag_post/" method="post">{% csrf_token %}
+    {% for key, value in tag_dict.items %}
+
+        <p style="font-weight: bold">>>{{ key }}<<</p>
+
+        {% for list_item in value %}
+
+            <p style="font-weight: bold">----{{ list_item }}----</p>
+
+            {% for item in all_tag_list %}
+
+                {% if item.root == key %}
+
+                    {% if item.sub01 == list_item %}
+
+                        <input type="checkbox" name="tag_list" value="{{ item.id }}"/>&nbsp&nbsp{{ item.name }}
+                        <br>
+
+                    {% endif %}
+
+                {% endif %}
+
+            {% endfor %}
+
+        {% endfor %}
+        <br>
+
+    {% endfor %}
+
+    <p>-----------------------------------------------------------------------------</p>
+    <p><input type="radio" name="intersect" value="yes"/>&nbsp&nbsp交集</p>
+    <p><input type="radio" name="intersect" value="no" checked="checked"/>&nbsp&nbsp并集</p>
+
+    **********************<input type="submit" value="Submit"/>**********************
+    <br><br>
+
+</form>
+
+{% include "foot.html" %}

@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Test</title>
+</head>
+<body>
+
+{% include "menu.html" %}
+
+<p>key_word_class: {{ key_word_class }}</p>
+
+
+<p>-----------------------------------------------------------------</p>
+{% for key, value in word_dict_all.items %}
+
+        <p>{{ key }}-- {{ value }}</p>
+
+{% endfor %}
+
+</body>
+</html>

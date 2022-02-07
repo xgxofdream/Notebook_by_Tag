@@ -1,0 +1,32 @@
+{% include "head.html" %}
+{% include "menu.html" %}
+
+|&nbsp&nbsp<a href="{{ web_url }}english/list_by_word/all/">All words</a>&nbsp&nbsp|
+<p>-----------------------------------------------------------------</p>
+{% for key, value in word_dict.items %}
+
+    <a href="{{ web_url }}english/list_by_word/{{ key }}" target="_blank">{{ key }}&nbsp({{ value|length }})</a>
+{% endfor %}
+
+
+<p>-----------------------------------------------------------------</p>
+
+{% for key, value in word_dict.items %}
+    <p style="font-weight: bold">>>{{ key }}<<</p>
+
+    {% for item_id in value %}
+
+        {% for note in english %}
+
+            {% if note.id == item_id %}
+
+                <a href="{{ web_url }}english/detail/{{ note.id }}/">{{ note.english_text }}</a><br>
+
+            {% endif %}
+        {% endfor %}
+
+    {% endfor %}
+
+{% endfor %}
+
+{% include "foot.html" %}

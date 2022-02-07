@@ -1,0 +1,47 @@
+{% include "head.html" %}
+
+{% include "menu.html" %}
+
+
+
+<table>
+    <tr>
+        <td style="font-weight: bold;width:15%;">Text</td>
+        <td style="font-weight: bold;">{{ english_text_detail.english_text }}</td>
+    </tr>
+    <tr>
+        <td style="font-weight: bold">Keywords</td>
+        <td>{{ english_text_detail.key_words }}</td>
+    </tr>
+    <tr>
+        <td style="font-weight: bold">Key_expressions</td>
+        <td>{{ english_text_detail.key_expressions }}</td>
+    </tr>
+    <tr>
+        <td style="font-weight: bold">Words_to_learn</td>
+        <td>{{ english_text_detail.words_to_learn }}</td>
+    </tr>
+    <tr>
+        <td style="font-weight: bold">Note</td>
+        <td>{{ english_text_detail.note }}</td>
+    </tr>
+
+</table>
+
+
+<p>--------------------------------------------------------------</p>
+
+Source:&nbsp&nbsp
+
+<a href="{{ web_url }}english/list_by_source/{{ source.id }}/"> {{ source.type }}&nbsp - &nbsp{{ source.name }}({{ source.author }})&nbsp @ &nbsp{{ reference.english_text_location }}
+</a>
+</p>
+
+Tag:&nbsp&nbsp
+{% for item in tag %}
+
+    <a href="{{ web_url }}english/list_by_tag_get/{{ item.id }}/">{{ item.name }}</a>&nbsp&nbsp
+
+{% endfor %}
+<p>--------------------------------------------------------------</p>
+{% include "foot.html" %}

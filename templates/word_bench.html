@@ -1,0 +1,91 @@
+{% include "head.html" %}
+{% include "menu.html" %}
+
+<br><br>
+
+<p style="font-weight: bold; text-align: center">
+    ----------------------------------------------Noun----------------------------------------------</p>
+{% for key, value in new_dict.items %}
+    {% if key in nn %}
+
+        <p style="font-weight: bold">>>> {{ key }} <<<</p>
+        |&nbsp
+        {% for item in value %}
+            <a href="{{ web_url }}english/detail/{{ item.id }}/">{{ item.key_words }}</a>&nbsp&nbsp|
+        {% endfor %}
+        <br><br>
+    {% endif %}
+{% endfor %}
+<br><br>
+<p style="font-weight: bold; text-align: center">
+    ----------------------------------------------Verb----------------------------------------------</p>
+{% for key, value in new_dict.items %}
+    {% if key in vb %}
+
+        <p style="font-weight: bold">>>> {{ key }} <<<</p>
+        |&nbsp
+        {% for item in value %}
+            <a href="{{ web_url }}english/detail/{{ item.id }}/">{{ item.key_words }}</a>&nbsp&nbsp|
+        {% endfor %}
+        <br><br>
+    {% endif %}
+{% endfor %}
+<br><br>
+<p style="font-weight: bold; text-align: center">
+    ----------------------------------------------Adjective----------------------------------------------</p>
+{% for key, value in new_dict.items %}
+    {% if key in jj %}
+
+        <p style="font-weight: bold">>>> {{ key }} <<<</p>
+        |&nbsp
+        {% for item in value %}
+            <a href="{{ web_url }}english/detail/{{ item.id }}/">{{ item.key_words }}</a>&nbsp&nbsp|
+        {% endfor %}
+        <br><br>
+    {% endif %}
+{% endfor %}
+<br><br>
+<p style="font-weight: bold; text-align: center">
+    ----------------------------------------------Adverb----------------------------------------------</p>
+{% for key, value in new_dict.items %}
+    {% if key in rb %}
+
+        <p style="font-weight: bold">>>> {{ key }} <<<</p>
+        |&nbsp
+        {% for item in value %}
+            <a href="{{ web_url }}english/detail/{{ item.id }}/">{{ item.key_words }}</a>&nbsp&nbsp|
+        {% endfor %}
+        <br><br>
+    {% endif %}
+{% endfor %}
+<br><br>
+<p style="font-weight: bold; text-align: center">----------------------------------------------Preposition &
+    conjunction----------------------------------------------</p>
+{% for key, value in new_dict.items %}
+    {% if key in prep_conj %}
+
+        <p style="font-weight: bold">>>> {{ key }} <<<</p>
+        |&nbsp
+        {% for item in value %}
+            <a href="{{ web_url }}english/detail/{{ item.id }}/">{{ item.key_words }}</a>&nbsp&nbsp|
+        {% endfor %}
+        <br><br>
+    {% endif %}
+{% endfor %}
+<br><br>
+<p style="font-weight: bold; text-align: center">
+    ----------------------------------------------Others----------------------------------------------</p>
+{% for key, value in new_dict.items %}
+    {% if key in others %}
+
+        <p style="font-weight: bold">>>> {{ key }} <<<</p>
+        |&nbsp
+        {% for item in value %}
+            <a href="{{ web_url }}english/detail/{{ item.id }}/">{{ item.key_words }}</a>&nbsp&nbsp|
+        {% endfor %}
+        <br><br>
+    {% endif %}
+{% endfor %}
+
+
+{% include "foot.html" %}

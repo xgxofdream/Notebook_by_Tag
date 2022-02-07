@@ -1,0 +1,20 @@
+{% include "head.html" %}
+{% include "menu.html" %}
+
+
+Tag:&nbsp&nbsp
+{% for item in tag_set %}
+
+    <a href="{{ web_url }}english/list_by_tag_get/{{ item.id }}/">{{ item.name }}</a>&nbsp&nbsp
+
+{% endfor %}
+<p>-----------------------------------------------------------------</p>
+
+{% for item in all_english_text %}
+    <a href="{{ web_url }}english/detail/{{ item.id }}/" target="_blank">
+        <p>{{ item.english_text }}@{{ item.id }}</p>
+    </a>
+{% endfor %}
+
+
+{% include "foot.html" %}

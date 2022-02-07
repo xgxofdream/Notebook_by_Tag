@@ -1,0 +1,18 @@
+{% include "head.html" %}
+{% include "menu.html" %}
+
+Source:&nbsp&nbsp
+
+
+<a href="{{ web_url }}english/list_by_source/{{ source.id }}/">{{ source.type }}&nbsp|&nbsp{{ source.name }}&nbsp by &nbsp{{ source.author }}</a>&nbsp&nbsp
+
+
+<p>-----------------------------------------------------------------</p>
+{% for item in english %}
+    <a href="{{ web_url }}english/detail/{{ item.id }}/">
+        <p>{{ item.english_text }} @id= {{ item.id }}</p>
+    </a>
+{% endfor %}
+
+
+{% include "foot.html" %}
