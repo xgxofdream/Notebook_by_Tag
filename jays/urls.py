@@ -15,7 +15,11 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from english import views
+
+# For media url
+from django.conf import settings
+from django.conf.urls.static import static
+
 from english.views import *
 
 urlpatterns = [
@@ -27,4 +31,4 @@ urlpatterns = [
 
     # 配置app的url
     path('english/', include('english.urls', namespace='english')),
-]
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

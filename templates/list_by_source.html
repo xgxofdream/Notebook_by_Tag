@@ -9,9 +9,15 @@ Source:&nbsp&nbsp
 
 <p>-----------------------------------------------------------------</p>
 {% for item in english %}
+     <p>
     <a href="{{ web_url }}english/detail/{{ item.id }}/">
-        <p>{{ item.english_text }} @id= {{ item.id }}</p>
+       {{ item.english_text }} @id= {{ item.id }}
     </a>
+    <audio controls style="width: 100px; height: 15px">
+  <source src="{{MEDIA_URL}}english/text_to_speech/{{ item.audio_name }}" type="audio/mpeg">
+Your browser does not support the audio element.
+</audio>
+    </p>
 {% endfor %}
 
 

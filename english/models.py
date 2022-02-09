@@ -78,6 +78,9 @@ class English(models.Model):
     words_to_learn = models.TextField(null=True)
     note = models.TextField(null=True)
 
+    # 是否有音频
+    audio_name = models.CharField(max_length=100, null=True)
+
     # 这是分类，标签和来源。
     # 我们在这里把文章对应的数据库表和分类、标签对应的数据库表关联了起来，但是关联形式稍微有点不同。
     # 我们规定一篇文章只能对应一个分类，但是一个分类下可以有多篇文章，所以我们使用的是 ForeignKey，即一

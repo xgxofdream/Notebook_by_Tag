@@ -1,7 +1,15 @@
 # 引入redirect重定向模块
 from django.shortcuts import render, redirect, get_object_or_404
 from django.db.models import Q
+
+
+
 import datetime
+
+import os
+
+
+from gtts import gTTS
 
 from stanfordcorenlp import StanfordCoreNLP
 
@@ -176,7 +184,11 @@ def list_by_source(request, id):
 
     english = English.objects.filter(reference_id__in=reference_id)
 
-    context = {'reference': reference, 'english': english, 'source': source,}
+    context = {
+        'reference': reference,
+        'english': english,
+        'source': source,
+    }
 
     return render(request, 'list_by_source.html', context)
 
@@ -198,6 +210,20 @@ def english_detail(request, id):
     # 正向查询:获取对应的Tag实例;
     tag = english_text_detail.tag.all()
 
+    # 如果没有音频，则创建音频
+    if english_text_detail.audio_name == None:
+
+        # 创建音频
+        text = english_text_detail.english_text
+        audio_name = str(english_text_detail.id) + '.mp3'
+        audio_url = './media/english/text_to_speech/' + audio_name
+        tts = gTTS(text)
+        tts.save(audio_url)
+        # 并把名字记入数据库
+        english_text_detail.audio_name = audio_name
+        english_text_detail.save()
+
+
     # 需要传递给模板的对象
     context = {
         'english_text_detail': english_text_detail,
@@ -208,6 +234,8 @@ def english_detail(request, id):
 
     # 载入模板，并返回context对象
     return render(request, 'detail.html', context)
+
+
 '''
 # 录入英语笔记
 '''
@@ -293,6 +321,8 @@ def submit(request):
     author = 10
 
 
+
+
     # 实例化
     english = English()
 
@@ -337,8 +367,6 @@ def submit(request):
     tag_obj = Tag.objects.get(id=tag)
     english.tag.add(tag_obj)
     '''
-
-    # 多个Tag的时候
     all_tag = request.POST.getlist('tag')
     if all_tag:
         for index in range(len(all_tag)):
@@ -347,6 +375,22 @@ def submit(request):
     else:
         tag_obj = Tag.objects.get(id=1) # id=1是“Not assigned”
         english.tag.add(tag_obj)
+
+    '''   
+    # 创建音频文件，并把名字记入数据库
+    '''
+    english = English.objects.all().last()
+    # 创建音频
+    text = english_text
+    audio_name = str(english.id) + '.mp3'
+    audio_url = './media/english/text_to_speech/' + audio_name
+    tts = gTTS(text)
+    tts.save(audio_url)
+    # 并把名字记入数据库
+    english.audio_name = audio_name
+    english.save()
+
+
 
     submission_result = "Succeed!"
 
