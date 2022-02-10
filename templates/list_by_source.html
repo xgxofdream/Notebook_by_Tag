@@ -8,13 +8,13 @@ Source:&nbsp&nbsp
 
 
 <p>-----------------------------------------------------------------</p>
-{% for item in english %}
+{% for key, value in english_dict.items %}
      <p>
-    <a href="{{ web_url }}english/detail/{{ item.id }}/">
-       {{ item.english_text }} @id= {{ item.id }}
+    <a href="{{ web_url }}english/detail/{{ key }}/">
+       {{ value.english_text|safe }} @id= {{ key }}
     </a>
     <audio controls style="width: 100px; height: 15px">
-  <source src="{{MEDIA_URL}}english/text_to_speech/{{ item.audio_name }}" type="audio/mpeg">
+  <source src="{{MEDIA_URL}}english/text_to_speech/{{ value.audio_name }}" type="audio/mpeg">
 Your browser does not support the audio element.
 </audio>
     </p>

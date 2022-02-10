@@ -5,8 +5,16 @@
 
 <table>
     <tr>
-        <td style="font-weight: bold;width:15%;">Text</td>
-        <td style="font-weight: bold;">{{ english_text_detail.english_text }}</td>
+        <td style="font-size: 30px; width:15%;">Text</td>
+        <td style="font-size: 30px;">
+
+            {% for key, value in english_dict.items %}
+
+                {{ value.english_text|safe }}
+
+            {% endfor %}
+
+        </td>
     </tr>
     <tr>
         <td style="font-weight: bold">Keywords</td>
@@ -29,8 +37,8 @@
 
 <br>
 <audio controls>
-  <source src="{{MEDIA_URL}}english/text_to_speech/{{ english_text_detail.audio_name }}" type="audio/mpeg">
-Your browser does not support the audio element.
+    <source src="{{ MEDIA_URL }}english/text_to_speech/{{ english_text_detail.audio_name }}" type="audio/mpeg">
+    Your browser does not support the audio element.
 </audio>
 
 <p>--------------------------------------------------------------</p>

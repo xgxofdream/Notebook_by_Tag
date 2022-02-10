@@ -1,7 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-        <style>
+    <style>
+
+        a:link, a:visited {
+            text-decoration: none; /*超链接无下划线*/
+        }
+
+        a:hover {
+            text-decoration: underline; /*鼠标放上去有下划线*/
+        }
+
+        span {
+            font-weight: bold;
+        }
+
         table {
             font-family: arial, sans-serif;
             border-collapse: collapse;
@@ -12,6 +25,7 @@
             border: 1px solid #dddddd;
             text-align: left;
             padding: 8px;
+            vertical-align: text-top;
         }
 
         tr:nth-child(even) {

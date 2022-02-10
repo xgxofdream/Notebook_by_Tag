@@ -23,11 +23,14 @@ from .models import *
 '''
 # 全局变量
 '''
+web_url = 'http://127.0.0.1:8000/'
+
 def global_params(request):
-    web_url = 'http://127.0.0.1:8000/'
+
+    global web_url
 
     return {
-        'web_url':web_url,
+        'web_url': web_url,
     }
 
 
@@ -75,6 +78,12 @@ def source_list(request, id):
     if id == 8:
         source = source.filter(type='王德中Cyrus')
         source_type = "王德中Cyrus"
+    if id == 9:
+        source = source.filter(type='Review Papers')
+        source_type = "Review Papers"
+    if id == 10:
+        source = source.filter(type='Research Papers')
+        source_type = "Research Papers"
 
 
     context = {'source': source, 'source_type': source_type}
@@ -103,7 +112,6 @@ def tag_list(request):
         # 字典的值去重
         tag_dict[every_key] = list(set(tag_dict[every_key]))
 
-    print(tag_dict)
 
     context = {'all_tag_list': all_tag_list, 'tag_dict': tag_dict}
     return render(request, 'tag_list.html', context)
@@ -149,9 +157,10 @@ def list_by_tag_post(request):
     for index in range(len(all_tag)):
         tag_obj = Tag.objects.get(id=all_tag[index])
 
-        all_english_text = tag_obj.notes.all().values('english_text', 'id')
+        all_english_text = tag_obj.notes.all()
 
         arr_query[index] = all_english_text
+
 
     ''''''
     # Tag的交集/并集运算
@@ -159,16 +168,30 @@ def list_by_tag_post(request):
         for index in range(len(arr_query)):
             all_english_text = all_english_text | arr_query[index]
 
+
     if intersect == 'yes':
         for index in range(len(arr_query)):
             all_english_text = all_english_text & arr_query[index]
 
+
     # 去除重复items
     all_english_text = all_english_text.order_by('id').distinct()
 
+    # 把笔记中的key_words 和 key_expressions高亮显示出来 via English的功能：text_highlight
+    english_dict = {};
+    for item in all_english_text:
+        single_english_note = item.text_highlight(item)
+        english_dict.update(single_english_note)
+
 
     # 需要传递给模板的对象
-    context = {'all_english_text': all_english_text, 'intersect_or_not': intersect, 'tag_set': tag_set}
+    context = {
+        'all_english_text': all_english_text,
+        'intersect_or_not': intersect,
+        'tag_set': tag_set,
+        'english_dict': english_dict,
+    }
+
     return render(request, 'list_by_tag.html', context)
 
 '''
@@ -184,9 +207,20 @@ def list_by_source(request, id):
 
     english = English.objects.filter(reference_id__in=reference_id)
 
+
+    # 把笔记中的key_words 和 key_expressions高亮显示出来 via English的功能：text_highlight
+    english_dict = {};
+
+    for item in english:
+
+        single_english_note = item.text_highlight(item)
+        english_dict.update(single_english_note)
+
+
     context = {
         'reference': reference,
         'english': english,
+        'english_dict': english_dict,
         'source': source,
     }
 
@@ -200,6 +234,12 @@ def list_by_source(request, id):
 def english_detail(request, id):
     # 获取对应的English实例 by id
     english_text_detail = get_object_or_404(English, id=id)
+
+    # 把笔记中的key_words 和 key_expressions高亮显示出来 via English的功能：text_highlight
+    english_dict = {};
+    single_english_note = english_text_detail.text_highlight(english_text_detail)
+    english_dict.update(single_english_note)
+
 
     # 获取对应的Reference实例
     reference = english_text_detail.reference
@@ -224,9 +264,11 @@ def english_detail(request, id):
         english_text_detail.save()
 
 
+
     # 需要传递给模板的对象
     context = {
         'english_text_detail': english_text_detail,
+        'english_dict': english_dict,
         'reference': reference,
         'tag': tag,
         'source': source,
@@ -270,13 +312,13 @@ def input(request, id):
         source = Source.objects.get(id=id)
 
         # 找出当前有笔记的页码往后10页的范围
-        reference_range = reference.filter(id__in = range(last_reference.id,last_reference.id+10))
+        reference_range = reference.filter(id__in = range(last_reference.id,last_reference.id+8))
         print(reference_range)
 
     # 如果Table English没有记录。
     else:
         ''' 
-        列出页码1-10
+        列出页码1-5
         '''
         # 找出书名
         source = Source.objects.get(id=id)
@@ -287,16 +329,35 @@ def input(request, id):
         last_reference = reference.all().first()
         print(last_reference.id)
 
-        reference_range = reference.all()[0:9]
+        reference_range = reference.all()[0:8]
         print(reference_range)
 
     #####################################################
     ############# listing Tags #######################
     # ~Q(Tag_id=0)： 所有不等于0的items
     all_tag_list = Tag.objects.filter(~Q(id=0))
+
+    # 初始化一个字典
+    tag_dict = {}
+    # 将数据表转化成字典。注意，item.root重复的键只会保留一个。所以，要对字典的键的值补救。
+    for item in all_tag_list:
+        # list([item.sub01]):将item.sub01转化为完整不分割的列表
+        tag_dict.update({item.root:list([item.sub01])})
+
+
+    for every_key in tag_dict:
+        for item in all_tag_list:
+            if every_key == item.root:
+                tag_dict[every_key].append(item.sub01)
+        # 字典的值去重
+        tag_dict[every_key] = list(set(tag_dict[every_key]))
+
+
+    print(tag_dict)
     #####################################################
 
     context = {
+        'tag_dict': tag_dict,
         'all_tag_list': all_tag_list,
         'reference_range': reference_range,
         'source': source,
@@ -332,7 +393,8 @@ def submit(request):
     # 准备回到笔记录入的url
     source_id = reference_obj.source_id
     print(source_id)
-    input_url = "http://127.0.0.1:8000/english/input/"+str(source_id)+"/"
+    global web_url
+    input_url = web_url+"english/input/"+str(source_id)+"/"
 
 
     #校验数据：笔记正文和笔记标签不能为空！
@@ -413,11 +475,12 @@ def word_bench(request):
     # 获取keywords
     # 清洗
     '''
-    word_str = ''
+    #word_str = ''
     word_dict_all = {}
-
+    '''
     for item in english:
         word_str = word_str + item.key_words + ','
+
 
     # print(word_str)
 
@@ -433,9 +496,18 @@ def word_bench(request):
 
     # 去掉重复的元素
     word_list = list(set(word_list))
-    # print(word_list)
+    print(word_list)
+    '''
+    word_list = []
+    for item in english:
+        word_list = word_list + item.key_words_clean(item.key_words)
 
-
+    # 去掉list中的空值
+    while '' in word_list:
+        word_list.remove('')
+    # 去掉重复的元素
+    word_list = list(set(word_list))
+    print(word_list)
 
     '''
     # 获取词性
@@ -475,6 +547,7 @@ def word_bench(request):
             item_word_str = item_word_str.replace(' ', '')
             # 转化为list via 逗号
             item_word_list = item_word_str.split(',')
+
             # 比对key words，将对应的id装入字典的值中（list的第一个元素（list））。
             if key in item_word_list:
                 word_dict_all[key][0].append(item.id)

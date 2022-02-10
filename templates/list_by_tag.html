@@ -10,17 +10,15 @@ Tag:&nbsp&nbsp
 {% endfor %}
 <p>-----------------------------------------------------------------</p>
 
-{% for item in all_english_text %}
-    <p>
-    <a href="{{ web_url }}english/detail/{{ item.id }}/" target="_blank">
-        {{ item.english_text }}@{{ item.id }}
-
-     <audio controls style="width: 100px; height: 15px">
-  <source src="{{MEDIA_URL}}english/text_to_speech/{{ item.audio_name }}" type="audio/mpeg">
+{% for key, value in english_dict.items %}
+     <p>
+    <a href="{{ web_url }}english/detail/{{ key }}/">
+       {{ value.english_text|safe }} @id= {{ key }}
+    </a>
+    <audio controls style="width: 100px; height: 15px">
+  <source src="{{MEDIA_URL}}english/text_to_speech/{{ value.audio_name }}" type="audio/mpeg">
 Your browser does not support the audio element.
 </audio>
-
-    </a>
     </p>
 {% endfor %}
 

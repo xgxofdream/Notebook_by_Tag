@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.db.models import Q
 
 '''
 # 英语摘录的分类
@@ -57,7 +58,19 @@ class Reference(models.Model):
         return self.english_text_location
 
 
+'''
+# 英语笔记的整理归纳
+'''
+class Summary(models.Model):
 
+    title = models.CharField(max_length=100, null=True)
+    abstract = models.TextField(null=True)
+    summary = models.TextField(null=True)
+
+
+
+    def __str__(self):
+        return self.title
 
 
 
@@ -92,6 +105,7 @@ class English(models.Model):
     # 同时我们规定文章可以没有标签，因此为标签 tags 指定了 blank=True。指定 CharField 的 blank=True 参数值后就可以允许空值了。
     category = models.ForeignKey(Category, on_delete=models.CASCADE, null=True)
     tag = models.ManyToManyField(to=Tag, related_name="notes", null=True)
+    summary = models.ManyToManyField(to=Tag, related_name="summary_notes", null=True)
     reference = models.ForeignKey(Reference, on_delete=models.CASCADE, null=True)
 
     # 作者。这里 User 是从 django.contrib.auth.models 导入的。
@@ -101,6 +115,92 @@ class English(models.Model):
     # 因为我们规定一篇文章只能有一个作者，而一个作者可能会写多篇文章，因此这是一对多的关联关系，和
     # Category 类似。
     author = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
+
+    #@staticmethod
+    def key_words_clean(self, text):
+        '''
+        # 清洗
+        '''
+        word_str = ''
+        word_str = word_str + text + ','
+        # 转化为list via 逗号
+        word_list = word_str.split(',')
+
+        # 去掉list中的空值（因为有的笔记里面，我没有输入key words）
+        while '' in word_list:
+            word_list.remove('')
+
+        # 去掉空格（录入时手误有时候会带上空格）
+        for i in range(len(word_list)):
+            word_list[i] = word_list[i].replace(' ', '')
+
+        # 去掉重复的元素
+        word_list = list(set(word_list))
+
+        return word_list
+
+    #@staticmethod
+    def key_expressions_clean(self, text):
+        '''
+        # 清洗
+        '''
+        word_str = ''
+        word_str = word_str + text + ','
+        # 转化为list via 逗号
+        word_list = word_str.split(',')
+
+        # 去掉list中的空值（因为有的笔记里面，我没有输入key words）
+        while '' in word_list:
+            word_list.remove('')
+
+
+        # 去掉重复的元素
+        word_list = list(set(word_list))
+
+        return word_list
+
+   # @staticmethod
+    def text_highlight(self, item):
+
+        # 把笔记中的key_words 和 key_expressions高亮显示出来
+        # 1. 把<mark style>, <span style> 加进笔记
+        # 2. 把笔记数据装进字典
+
+        english_dict = {};
+
+        # 初始化english_text
+        english_text = item.english_text
+        # 清洗字符串，并转化成list
+        keyword_list = item.key_words_clean(item.key_words)
+        key_expression_list = item.key_expressions_clean(item.key_expressions)
+
+        '''把笔记中的key_expressions高亮显示出来'''
+        for i in range(len(key_expression_list)):
+            # 把笔记中的key_expressions加上<mark style>
+            styled_key_expression = "<mark>" + key_expression_list[i] + "</mark>"
+            # 替换掉english_text无<mark style>标记的key_expressions
+            english_text = english_text.replace(key_expression_list[i], styled_key_expression)
+
+
+        '''把笔记中的key_words高亮显示出来'''
+        for i in range(len(keyword_list)):
+            # 把笔记中的key_word加上<span style>
+            styled_key_words = '<span>' + keyword_list[i] + '</span>'
+            # 替换掉english_text无<span style>标记的key_words
+            english_text = english_text.replace(keyword_list[i], styled_key_words)
+
+        '''把笔记数据装进字典'''
+        key = item.id
+        value = {
+            'english_text': english_text,
+            'key_words': item.key_words,
+            'key_expressions': item.key_expressions,
+            'audio_name': item.audio_name,
+        }
+
+        english_dict.update({key: value})
+
+        return english_dict
 
     def __str__(self):
         return self.english_text
