@@ -2,6 +2,8 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.db.models import Q
 
+from stanfordcorenlp import StanfordCoreNLP
+
 '''
 # 英语摘录的分类
 '''
@@ -22,6 +24,33 @@ class Tag(models.Model):
     sub01 = models.CharField(max_length=100,null=True)
     sub02 = models.CharField(max_length=100,null=True)
 
+    def tag_list(self, id):
+
+        if id == 0:
+            # ~Q(source_id=0)： 所有不等于0的items
+            all_tag_list = Tag.objects.filter(~Q(id=id))
+
+        # 初始化一个字典
+        tag_dict = {}
+        # 将数据表转化成字典。注意，item.root重复的键只会保留一个。所以，要对字典的键的值补救。
+        for item in all_tag_list:
+            # list([item.sub01]):将item.sub01转化为完整不分割的列表
+            tag_dict.update({item.root: list([item.sub01])})
+
+        for every_key in tag_dict:
+            for item in all_tag_list:
+                if every_key == item.root:
+                    tag_dict[every_key].append(item.sub01)
+            # 字典的值去重
+            tag_dict[every_key] = list(set(tag_dict[every_key]))
+
+        return {
+            'all_tag_list': all_tag_list,
+            'tag_dict': tag_dict,
+        }
+
+
+
     def __str__(self):
         return self.name
 
@@ -39,6 +68,50 @@ class Source(models.Model):
     author = models.CharField(max_length=1000,null=True)
     summary = models.TextField(null=True)
     publication = models.TextField(null=True)
+
+
+    def source_list(self, id):
+        source = Source.objects.filter(~Q(id=0))
+        if id == 0:
+            source = source
+            source_type = "All"
+        if id == 1:
+            source = source.filter(type='Novels')
+            source_type = "Novels"
+        if id == 2:
+            source = source.filter(type='Poems')
+            source_type = "Poems"
+        if id == 3:
+            source = source.filter(type='Reference books')
+            source_type = "Reference books"
+        if id == 4:
+            source = source.filter(type='Autobiography')
+            source_type = "Autobiography"
+        if id == 5:
+            source = source.filter(type='Diary')
+            source_type = "Diary"
+        if id == 6:
+            source = source.filter(type='Textbook')
+            source_type = "Textbook"
+        if id == 7:
+            source = source.filter(type='Elon Mush')
+            source_type = "Elon Mush"
+        if id == 8:
+            source = source.filter(type='王德中Cyrus')
+            source_type = "王德中Cyrus"
+        if id == 9:
+            source = source.filter(type='Review Papers')
+            source_type = "Review Papers"
+        if id == 10:
+            source = source.filter(type='Research Papers')
+            source_type = "Research Papers"
+
+        return {
+            'source': source,
+            'source_type': source_type,
+        }
+
+
 
     def __str__(self):
         return self.name
@@ -201,6 +274,154 @@ class English(models.Model):
         english_dict.update({key: value})
 
         return english_dict
+
+    '''
+    # word bench
+    '''
+
+    def word_bench(self, type, id):
+
+        if type == 'source':
+            if id == 0:
+                english = English.objects.filter(~Q(id=0))
+            else:
+                # Reference的__str__一定要放回str类型的数据，不然报错！很奇怪！
+                reference = Reference.objects.filter(source_id=id)
+                reference_id = reference.values('id')
+
+                english = English.objects.filter(reference_id__in=reference_id)
+
+        if type == 'tag':
+            english = English.objects.filter(id__in=id)
+
+
+
+        '''
+        # 获取keywords
+        # 清洗
+        '''
+        word_dict_all = {}
+
+        word_list = []
+        for item in english:
+            word_list = word_list + item.key_words_clean(item.key_words)
+
+        # 去掉list中的空值
+        while '' in word_list:
+            word_list.remove('')
+        # 去掉重复的元素
+        word_list = list(set(word_list))
+        print(word_list)
+
+        '''
+        # 获取词性
+        # 写入字典
+        '''
+        # 载入当地的词性分析器
+        annotator = StanfordCoreNLP("C:/corenlp", lang="en")
+        # 载入在线的词性分析器
+        # annotator = StanfordCoreNLP("https://corenlp.run/", lang="en")
+
+        # annotator = CoreNLP(annotators="pos", corenlp_dir=corenlp_dir, lang="en") # 用于CoreNLP
+        for item in word_list:
+            # 获取词性
+            key_word_class = annotator.pos_tag(item)
+            # 处理词性数据格式，读出为字符串
+            key_word_class = key_word_class[0][1]  # 用于StanfordCoreNLP
+            # key_word_class = key_word_class[0][1] # 用于CoreNLP
+
+            # 字典的值为空的复合列表:[[],'']。第一个存属于这个键的笔记，第二个存这个键的词性
+            # 注入键，并把键对应的词的词性写入值（list类型）中的第二个元素
+            word_dict_all.update({item: [[], key_word_class]})
+
+        '''
+        # 获取id
+        # 写入字典
+        '''
+        # 比对key words，将对应的id装入字典的值中。
+        for key in word_dict_all:
+
+            for item in english:
+                # 清洗 Table English 里的key_words字段。
+                # 载入 key_words, 一个item的key_words可能保存了多个keywords，所以要把他们组成字符串（item_word_str)
+                item_word_str = item.key_words
+                # 去掉空格（录入key words时，有时候会带上空格）
+                item_word_str = item_word_str.replace(' ', '')
+                # 转化为list via 逗号
+                item_word_list = item_word_str.split(',')
+
+                # 比对key words，将对应的id装入字典的值中（list的第一个元素（list））。
+                if key in item_word_list:
+                    word_dict_all[key][0].append(item.id)
+
+        # print(word_dict_all)
+
+        '''
+        # 对word_dict_all重构得到一个新字典。即，以词性为键，值为keywords和其在数据库中的id。
+        '''
+        new_dict = {}
+
+        # 获取词性列表
+        word_class_list = []
+        for key, value in word_dict_all.items():
+            word_class_list.append(value[1])
+
+        # 去除重复的词性名称
+        word_class_list = list(set(word_class_list))
+
+        #######################################################
+        ############ 将老字典重构成新字典，以词性为键################
+        ########################################################
+        # 新字典形式：其内部结构为：{item: {}}
+        # 给字典的键（key）赋值 = 词性
+        for item in word_class_list:
+            new_dict.update({item: []})  #
+
+        # 给字典的值（value）赋值
+        # word_dict_all = {'keyword' : [id list], 'word class'}
+        # new_dict = {'word class' : { keyword : [id list] } }
+
+        # 遍历新字典，给其相应的键的值赋值
+        for new_key, new_value in new_dict.items():
+            keyword_id_list = []
+            # 把同一词性的英语笔记收集在一起
+            for key, value in word_dict_all.items():
+                if new_key == value[1]:  # value[1] = 'word class'
+
+                    # 合并所有相关英语笔记的id
+                    keyword_id_list.extend(value[0])
+
+            # 去除重复
+            keyword_id_list = list(set(keyword_id_list))
+            for item in english:
+                if item.id in keyword_id_list:
+                    new_value.append(item)
+
+        vb = ['VB', 'VBD', 'VBG', 'VBN', 'VBP', 'VBZ']
+        nn = ['NN', 'NNS', 'NNP', 'NNSP']
+        jj = ['JJ', 'JJS', 'JJR']
+        rb = ['RB', 'RBS', 'RBR', 'WBR']
+        prep_conj = ['IN', 'RP', 'CC', 'TO']
+        pronoun = ['PRP', 'WP', 'PRP$', 'WP$']
+        determiner = ['DT', 'PDT', 'WDT']
+        emo = ['MD', 'UH']
+        other = ['CD', 'POS', 'LS', 'SYM', 'EX', 'FW']
+        others = pronoun + determiner + emo + other
+
+        context = {
+            'english': english,
+            'word_dict_all': word_dict_all,
+            'new_dict': new_dict,
+            'nn': nn,
+            'vb': vb,
+            'jj': jj,
+            'rb': rb,
+            'prep_conj': prep_conj,
+            'others': others
+        }
+        return context
+
+
 
     def __str__(self):
         return self.english_text

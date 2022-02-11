@@ -28,7 +28,7 @@ urlpatterns = [
     # 来源列表
 
     # Tag列表
-    path('tag_list/', views.tag_list, name='tag_list'),
+    path('tag_list/<int:id>/', views.tag_list, name='tag_list'),
 
     # Source列表
     path('source_list/<int:id>/', views.source_list, name='source_list'),
@@ -52,10 +52,11 @@ urlpatterns = [
     # 提交英语笔记
     path('submit/', views.submit, name='submit'),
 
-    # 提交英语笔记
-    path('word_bench/', views.word_bench, name='submit'),
+    # 提交到Word Bench
+    path('word_bench/<str:type>/<int:id>/', views.word_bench, name='submit'),
 
-    # 提交英语笔记
+
+    # 提交到Word Bench
     path('list_by_word/<str:id>/', views.list_by_word, name='submit'),
 
     # 我的总结

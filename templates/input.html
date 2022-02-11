@@ -19,7 +19,6 @@
         <tr>
             <td>
                 <p style="font-weight: bold">>>标签<<</p>
-
                 {% for key, value in tag_dict.items %}
 
                     <p style="font-weight: bold">>>{{ key }}<<</p>
@@ -27,29 +26,30 @@
                     {% for list_item in value %}
                         <details>
 
-                        <summary style="font-weight: bold">----{{ list_item }}----</summary>
+                            <summary style="font-weight: bold">----{{ list_item }}----</summary>
 
-                        {% for item in all_tag_list %}
+                            {% for item in all_tag_list %}
 
-                            {% if item.root == key %}
+                                {% if item.root == key %}
 
-                                {% if item.sub01 == list_item %}
+                                    {% if item.sub01 == list_item %}
 
-                                    <input type="checkbox" name="tag_list" value="{{ item.id }}"/>
-                                    {{ item.name }}
-                                    <br>
+                                        <input type="checkbox" name="tag_list" value="{{ item.id }}"/>
+                                        {{ item.name }}
+                                        <br>
+
+                                    {% endif %}
 
                                 {% endif %}
 
-                            {% endif %}
-
-                        {% endfor %}
+                            {% endfor %}
                         </details>
 
                     {% endfor %}
                     <br>
 
                 {% endfor %}
+
             </td>
             <td>
 
@@ -87,13 +87,10 @@
                 <br><br><br>
                 <p style="font-weight: bold; text-align: center">**********************<input type="submit" value="Submit"/>**********************</p>
 
-    <br>
+                <br>
             </td>
         </tr>
     </table>
-
-
-
 
 
 </form>
