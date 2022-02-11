@@ -453,10 +453,15 @@ def word_bench(request, type, id):
 
     context.update({'all_tag_list':all_tag_list, 'tag_dict':tag_dict, })
 
+    if type == 'None':
+        '''只现实Word bench的操作界面'''
+        context = context
+
     if type == 'source':
         '''单词按词性分类（Source来源）'''
         data = English().word_bench(type, id)
         context.update(data)
+
     if type == 'tag':
 
         '''单词按词性分类(Tag来源）'''

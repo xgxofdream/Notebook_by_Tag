@@ -1,19 +1,21 @@
 {% include "head.html" %}
 {% include "menu.html" %}
 <p>*****************************************************************************************************</p>
+<a href="{{ web_url }}english/word_bench/source/0/">All</a>
+<p>*****************************************************************************************************</p>
 Source:&nbsp
     <select onchange="self.location.href=options[selectedIndex].value">
-        <option value="{{ web_url }}english/word_bench/0/">All</option>
-        <option value="{{ web_url }}english/word_bench/1/">Novels</option>
-        <option value="{{ web_url }}english/word_bench/2/">Poems</option>
-        <option value="{{ web_url }}english/word_bench/3/">Reference books</option>
-        <option value="{{ web_url }}english/word_bench/4/">Autobiography</option>
-        <option value="{{ web_url }}english/word_bench/5/">Diary</option>
-        <option value="{{ web_url }}english/word_bench/6/">Textbook</option>
-        <option value="{{ web_url }}english/word_bench/7/">Elon Mush</option>
-        <option value="{{ web_url }}english/word_bench/8/">王德中Cyrus</option>
-        <option value="{{ web_url }}english/word_bench/9/">Review Papers</option>
-        <option value="{{ web_url }}english/word_bench/10/">Research Papers</option>
+        <option value="{{ web_url }}english/word_bench/source/0/">All</option>
+        <option value="{{ web_url }}english/word_bench/source/1/">Novels</option>
+        <option value="{{ web_url }}english/word_bench/source/2/">Poems</option>
+        <option value="{{ web_url }}english/word_bench/source/3/">Reference books</option>
+        <option value="{{ web_url }}english/word_bench/source/4/">Autobiography</option>
+        <option value="{{ web_url }}english/word_bench/source/5/">Diary</option>
+        <option value="{{ web_url }}english/word_bench/source/6/">Textbook</option>
+        <option value="{{ web_url }}english/word_bench/source/7/">Elon Mush</option>
+        <option value="{{ web_url }}english/word_bench/source/8/">王德中Cyrus</option>
+        <option value="{{ web_url }}english/word_bench/source/9/">Review Papers</option>
+        <option value="{{ web_url }}english/word_bench/source/10/">Research Papers</option>
     </select>
 <p>*****************************************************************************************************</p>
 <form action="{{ web_url }}english/word_bench/tag/0/" method="post"> {% csrf_token %}
