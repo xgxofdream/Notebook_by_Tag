@@ -70,46 +70,38 @@ class Source(models.Model):
     publication = models.TextField(null=True)
 
 
-    def source_list(self, id):
-        source = Source.objects.filter(~Q(id=0))
-        if id == 0:
-            source = source
-            source_type = "All"
-        if id == 1:
-            source = source.filter(type='Novels')
-            source_type = "Novels"
-        if id == 2:
-            source = source.filter(type='Poems')
-            source_type = "Poems"
-        if id == 3:
-            source = source.filter(type='Reference books')
-            source_type = "Reference books"
-        if id == 4:
-            source = source.filter(type='Autobiography')
-            source_type = "Autobiography"
-        if id == 5:
-            source = source.filter(type='Diary')
-            source_type = "Diary"
-        if id == 6:
-            source = source.filter(type='Textbook')
-            source_type = "Textbook"
-        if id == 7:
-            source = source.filter(type='Elon Mush')
-            source_type = "Elon Mush"
-        if id == 8:
-            source = source.filter(type='王德中Cyrus')
-            source_type = "王德中Cyrus"
-        if id == 9:
-            source = source.filter(type='Review Papers')
-            source_type = "Review Papers"
-        if id == 10:
-            source = source.filter(type='Research Papers')
-            source_type = "Research Papers"
+    def source_summary(self):
 
-        return {
-            'source': source,
-            'source_type': source_type,
-        }
+        source = Source.objects.filter(~Q(id=0))
+
+        '''Summary Table Source'''
+        source_dict = {}
+
+        for item in source:
+            if source_dict.__contains__(item.type):
+                # 计数
+                source_dict[item.type][0] = source_dict[item.type][0] + 1
+                # 记录source id, 其一一对应于name字段
+                source_dict[item.type][1].append(str(item.id))
+            else:
+                count = 1
+                source_id_list = list([str(item.id)])
+
+                source_dict.update({item.type: [count, source_id_list]})
+
+        return source_dict
+
+
+    def source_list(self, source_type):
+
+        source = Source.objects.filter(~Q(id=0))
+
+        if source_type == 'all':
+            source = source
+        else:
+            source = source.filter(type=source_type)
+
+        return source
 
 
 
@@ -140,11 +132,8 @@ class Summary(models.Model):
     abstract = models.TextField(null=True)
     summary = models.TextField(null=True)
 
-
-
     def __str__(self):
         return self.title
-
 
 
 '''
@@ -279,21 +268,22 @@ class English(models.Model):
     # word bench
     '''
 
-    def word_bench(self, type, id):
+    def word_bench(self, method, value):
 
-        if type == 'source':
-            if id == 0:
+        if method == 'source':
+
+            if value == 'all':
                 english = English.objects.filter(~Q(id=0))
             # 即，反向查询。
             else:
-                # Reference的__str__一定要放回str类型的数据，不然报错！很奇怪！
-                reference = Reference.objects.filter(source_id=id)
+                source_id = Source.objects.filter(type=value).values('id')
+                reference = Reference.objects.filter(source_id__in=source_id)
                 reference_id = reference.values('id')
 
                 english = English.objects.filter(reference_id__in=reference_id)
 
-        if type == 'tag':
-            english = English.objects.filter(id__in=id)
+        if method == 'tag':
+            english = English.objects.filter(id__in=value)
 
 
 
@@ -545,7 +535,8 @@ class English(models.Model):
             source_id_list = source_id_list
         # 一条记录的查询时，source_id_list为整数，所以要转化为list
         else:
-            source_id_list = list(str(source_id_list))
+            # [str(source_id_list)]一定要加个方括号，这样两位数就不会被list成两个元素了，比如10就不会变成[1,0]
+            source_id_list = list([str(source_id_list)])
 
         source = Source.objects.filter(id__in=source_id_list)
 
@@ -582,7 +573,8 @@ class English(models.Model):
             tag_id_list = tag_id_list
         # 一条记录的查询时，tag_id_list为整数，所以要转化为list
         else:
-            tag_id_list = list(str(tag_id_list))
+            # [str(tag_id_list)]一定要加个方括号，这样两位数就不会被list成两个元素了，比如10就不会变成[1,0]
+            tag_id_list = list([str(tag_id_list)])
 
         # 实例化Tag
         tag_set = Tag.objects.filter(id__in=tag_id_list)
@@ -609,6 +601,11 @@ class English(models.Model):
         # 去除重复items
         all_english_text = all_english_text.order_by('id').distinct()
 
+        english_id_list = []
+        for item in all_english_text:
+            english_id_list.append(str(item.id))
+
+
         # 把笔记中的key_words 和 key_expressions高亮显示出来 via English的功能：text_highlight
         english_styled = {};
         for item in all_english_text:
@@ -618,6 +615,7 @@ class English(models.Model):
         # 需要传递给模板的对象
         data = {
             'all_english_text': all_english_text,
+            'english_id_list': english_id_list,
             'intersect_or_not': intersect_or_not,
             'tag_set': tag_set,
             'english_styled': english_styled,

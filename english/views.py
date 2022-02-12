@@ -24,6 +24,7 @@ from .models import *
 # 全局变量
 '''
 web_url = 'http://127.0.0.1:8000/'
+audio_src = './media/english/text_to_speech/'
 
 def global_params(request):
 
@@ -48,15 +49,23 @@ def index(request):
 '''
 # 列出Source
 '''
-def source_list(request, id):
-    # 调用
-    source_dict = Source().source_list(id)
+def source_list(request, source_type):
+    # 初始化 context
+    context = {}
 
-    # 返回值
-    source = source_dict['source']
-    source_type = source_dict['source_type']
+    # 调用source的类型数据
+    source_dict = Source().source_summary()
 
-    context = {'source': source, 'source_type': source_type}
+    # 读取相应的source数据
+    source = Source().source_list(source_type)
+
+
+    context.update({
+        'source': source,
+        'source_dict': source_dict,
+        'source_type': source_type,
+    })
+
     return render(request, 'source_list.html', context)
 
 '''
@@ -89,24 +98,34 @@ def list_by_tag_get(request, id):
     # 注意notes in Model_English:tag = models.ManyToManyField(to=Tag, related_name="notes", null=True)
     all_english_text = tag_obj.notes.all()
 
-
     # 把笔记中的key_words 和 key_expressions高亮显示出来 via English的功能：text_highlight
-    english_dict = {};
+    english_styled = {};
     for item in all_english_text:
         single_english_note = item.text_highlight(item)
-        english_dict.update(single_english_note)
+        english_styled.update(single_english_note)
+
+
+    # 实例化一个English
+    english = English()
+
+    # 读取对tags的统计数据
+    data_tag = english.english_to_tag(all_english_text)
+
+    # 读取对sources的统计数据
+    data_source = english.english_to_source(all_english_text)
 
 
     # 需要传递给模板的对象
     context = {
         'all_english_text': all_english_text,
         'tag_set': tag_set,
-        'english_dict': english_dict,
+        'english_styled': english_styled,
+        'statistics_tag': data_tag['statistics_tag'],
+        'statistics_source': data_source['statistics_source'],
 
     }
 
     return render(request, 'list_by_tag.html', context)
-
 
 
 '''
@@ -130,8 +149,6 @@ def list_by_tag_post(request):
 
     # 读取对sources的统计数据
     data_source = english.english_to_source(data_english['all_english_text'])
-
-
 
     # 需要传递给模板的对象
     context = {
@@ -178,11 +195,13 @@ def list_by_source(request, id):
     return render(request, 'list_by_source.html', context)
 
 
-
 '''
 # 英语笔记详情
 '''
 def english_detail(request, id):
+
+    global audio_src
+
     # 获取对应的English实例 by id
     english_text_detail = get_object_or_404(English, id=id)
 
@@ -207,9 +226,9 @@ def english_detail(request, id):
         # 创建音频
         text = english_text_detail.english_text
         audio_name = str(english_text_detail.id) + '.mp3'
-        audio_url = './media/english/text_to_speech/' + audio_name
+        audio_src = audio_src + audio_name
         tts = gTTS(text)
-        tts.save(audio_url)
+        tts.save(audio_src)
         # 并把名字记入数据库
         english_text_detail.audio_name = audio_name
         english_text_detail.save()
@@ -230,10 +249,142 @@ def english_detail(request, id):
 
 
 '''
+# word bench
+'''
+def word_bench(request, method, source_type):
+
+    # 初始化 context
+    context = {}
+
+    '''准备页面的基本数据'''
+    # 调用
+    data = Tag().tag_list(0)
+
+    # 返回值
+    all_tag_list = data['all_tag_list']
+    tag_dict = data['tag_dict']
+
+    # source option
+    source = Source()
+    source_dict = source.source_summary()
+
+    context.update({
+        'all_tag_list': all_tag_list,
+        'tag_dict': tag_dict,
+        'source_dict': source_dict,
+    })
+
+    '''只显示Word bench的操作界面'''
+    if method == 'None':
+        context = context
+
+    '''单词按词性分类（Source来源）'''
+    if method == 'source':
+
+        data = English().word_bench(method, source_type)
+        context.update(data)
+
+    '''单词按词性分类(Tag来源）'''
+    if method == 'tag':
+        # 获取 POST 参数
+        if request.POST.getlist('tag_list'):
+            all_tag = request.POST.getlist('tag_list')
+            intersect = request.POST.get('intersect')
+            method = request.POST.get('method')
+
+            # 调用tag_to_english,查询出所有符合条件的english notes
+            data = English().tag_to_english(all_tag, intersect)
+            english_id_list = data['english_id_list']
+
+            # 调用Word Bench
+            data = English().word_bench(method, english_id_list)
+            context.update(data)
+
+    return render(request, 'word_bench.html', context)
+
+
+'''
+# list by word
+'''
+def list_by_word(request, id):
+
+    english = English.objects.filter(~Q(id=0))
+
+    word_str = ''
+    word_dict_all = {}
+
+    for item in english:
+        word_str = word_str + item.key_words + ','
+
+    # print(word_str)
+
+    # 去掉空格（录入key words时，有时候会带上空格）
+    word_str = word_str.replace(' ', '')
+
+    # 转化为list via 逗号
+    word_list = word_str.split(',')
+
+    # 去掉list中的空值（因为有的笔记里面，我没有输入key words）
+    while '' in word_list:
+        word_list.remove('')
+
+    # 去掉重复的元素
+    word_list = list(set(word_list))
+
+    # 将list转化成字典，keywords为键，值为空。！！！重复的keyword只会被转化为一个键值(字典的功能）！！！
+    for item in word_list:
+        word_dict_all.update({item: []})
+
+    # 比对key words，将对应的id装入字典的值中。
+    for key in word_dict_all:
+        for item in english:
+            # 清洗 Table English 里的key_words字段。
+            # 载入 key_words, 一个item的key_words可能保存了多个keywords，所以要把他们组成字符串（item_word_str)
+            item_word_str = item.key_words
+            # 去掉空格（录入key words时，有时候会带上空格）
+            item_word_str = item_word_str.replace(' ', '')
+            # 转化为list via 逗号
+            item_word_list = item_word_str.split(',')
+
+
+
+            if key in item_word_list:
+                word_dict_all[key].append(item.id)
+
+
+    # print(word_dict_all)
+
+    # 整部字典
+    if id == 'all':
+        word_dict = word_dict_all
+
+    else:
+        # 对字典切片
+        word_dict = {key:value for (key, value) in word_dict_all.items() if key == id }
+
+    context = {'english': english, 'word_dict': word_dict}
+    return render(request, 'list_by_word.html', context)
+
+    print(word_dict)
+
+
+'''
+# 我的总结
+'''
+def summary(request):
+    summary = 'be building'
+    # 需要传递给模板的对象
+    context = {
+        'summary': summary,
+    }
+
+    # 载入模板，并返回context对象
+    return render(request, 'summary.html', context)
+
+
+'''
 # 录入英语笔记
 '''
-
-
 def input(request, id):
 
     ############# 上一次记录到哪里 (the last English_text_location)#######################
@@ -318,7 +469,11 @@ def input(request, id):
     return render(request, 'input.html', context)
 
 
+'''
+# 提交笔记
+'''
 def submit(request):
+    global audio_src
     # 获取 POST 参数
     all_data = request.body
     english_text = request.POST.get('english_text')
@@ -396,9 +551,9 @@ def submit(request):
     # 创建音频
     text = english_text
     audio_name = str(english.id) + '.mp3'
-    audio_url = './media/english/text_to_speech/' + audio_name
+    audio_src = audio_src + audio_name
     tts = gTTS(text)
-    tts.save(audio_url)
+    tts.save(audio_src)
     # 并把名字记入数据库
     english.audio_name = audio_name
     english.save()
@@ -412,163 +567,3 @@ def submit(request):
         context = {'submission_result': submission_result, 'all_data': all_data, 'input_url': input_url,
                    'time_dalay': time_dalay}
         return render(request, 'submit.html', context)
-
-
-
-'''
-# word bench
-'''
-def word_bench(request, type, id):
-
-    # 初始化 context
-    context = {}
-
-    '''显示标签'''
-    # 调用
-    data = Tag().tag_list(0)
-
-    # 返回值
-    all_tag_list = data['all_tag_list']
-    tag_dict = data['tag_dict']
-
-    context.update({'all_tag_list':all_tag_list, 'tag_dict':tag_dict, })
-
-    if type == 'None':
-        '''只现实Word bench的操作界面'''
-        context = context
-
-    if type == 'source':
-        '''单词按词性分类（Source来源）'''
-        data = English().word_bench(type, id)
-        context.update(data)
-
-    if type == 'tag':
-
-        '''单词按词性分类(Tag来源）'''
-        # Tag id
-        # 获取 POST 参数
-        if request.POST.getlist('tag_list'):
-            all_tag = request.POST.getlist('tag_list')
-            intersect = request.POST.get('intersect')
-            type = request.POST.get('type')
-            print(type)
-
-            # 实例化Tag
-            tag_set = Tag.objects.filter(id__in=all_tag)
-
-            arr_query = list(all_tag)
-
-
-            for index in range(len(all_tag)):
-                tag_obj = Tag.objects.get(id=all_tag[index])
-
-                all_english_text = tag_obj.notes.all()
-
-                arr_query[index] = all_english_text
-
-
-            ''''''
-            # Tag的交集/并集运算
-            if intersect == 'no':
-                for index in range(len(arr_query)):
-                    all_english_text = all_english_text | arr_query[index]
-
-
-            if intersect == 'yes':
-                for index in range(len(arr_query)):
-                    all_english_text = all_english_text & arr_query[index]
-
-            # 去除重复items
-            all_english_text = all_english_text.order_by('id').distinct()
-            print(all_english_text)
-
-            id_list = []
-            for item in all_english_text:
-                id_list.append(str(item.id))
-
-            data = English().word_bench(type, id_list)
-            context.update(data)
-
-    return render(request, 'word_bench.html', context)
-
-
-
-
-
-'''
-# list by word
-'''
-def list_by_word(request, id):
-
-    english = English.objects.filter(~Q(id=0))
-
-    word_str = ''
-    word_dict_all = {}
-
-    for item in english:
-        word_str = word_str + item.key_words + ','
-
-    # print(word_str)
-
-    # 去掉空格（录入key words时，有时候会带上空格）
-    word_str = word_str.replace(' ', '')
-
-    # 转化为list via 逗号
-    word_list = word_str.split(',')
-
-    # 去掉list中的空值（因为有的笔记里面，我没有输入key words）
-    while '' in word_list:
-        word_list.remove('')
-
-    # 去掉重复的元素
-    word_list = list(set(word_list))
-
-    # 将list转化成字典，keywords为键，值为空。！！！重复的keyword只会被转化为一个键值(字典的功能）！！！
-    for item in word_list:
-        word_dict_all.update({item: []})
-
-    # 比对key words，将对应的id装入字典的值中。
-    for key in word_dict_all:
-        for item in english:
-            # 清洗 Table English 里的key_words字段。
-            # 载入 key_words, 一个item的key_words可能保存了多个keywords，所以要把他们组成字符串（item_word_str)
-            item_word_str = item.key_words
-            # 去掉空格（录入key words时，有时候会带上空格）
-            item_word_str = item_word_str.replace(' ', '')
-            # 转化为list via 逗号
-            item_word_list = item_word_str.split(',')
-
-
-
-            if key in item_word_list:
-                word_dict_all[key].append(item.id)
-
-
-    # print(word_dict_all)
-
-    # 整部字典
-    if id == 'all':
-        word_dict = word_dict_all
-
-    else:
-        # 对字典切片
-        word_dict = {key:value for (key, value) in word_dict_all.items() if key == id }
-
-    context = {'english': english, 'word_dict': word_dict}
-    return render(request, 'list_by_word.html', context)
-
-    print(word_dict)
-
-
-'''
-# 我的总结
-'''
-def summary(request):
-    summary = 'be building'
-    # 需要传递给模板的对象
-    context = {
-        'summary': summary,
-    }
-
-    # 载入模板，并返回context对象
-    return render(request, 'summary.html', context)

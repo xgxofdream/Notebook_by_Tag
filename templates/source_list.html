@@ -2,23 +2,15 @@
 {% include "menu.html" %}
 
 
-
-Type:&nbsp
-
+<span style="font-weight: bold">Source:</span>&nbsp
     <select onchange="self.location.href=options[selectedIndex].value">
-        <option value="{{ web_url }}english/source_list/0/">All</option>
-        <option value="{{ web_url }}english/source_list/1/">Novels</option>
-        <option value="{{ web_url }}english/source_list/2/">Poems</option>
-        <option value="{{ web_url }}english/source_list/3/">Reference books</option>
-        <option value="{{ web_url }}english/source_list/4/">Autobiography</option>
-        <option value="{{ web_url }}english/source_list/5/">Diary</option>
-        <option value="{{ web_url }}english/source_list/6/">Textbook</option>
-        <option value="{{ web_url }}english/source_list/7/">Elon Mush</option>
-        <option value="{{ web_url }}english/source_list/8/">王德中Cyrus</option>
-        <option value="{{ web_url }}english/source_list/9/">Review Papers</option>
-        <option value="{{ web_url }}english/source_list/10/">Research Papers</option>
-    </select>
+        <option value="{{ web_url }}">--------</option>
+        <option value="{{ web_url }}english/source_list/all/">All</option>
+        {% for key, value in source_dict.items %}
+            <option value="{{ web_url }}english/source_list/{{ key }}/">{{ key }}</option>
 
+        {% endfor %}
+   </select>
 
 <p>*****************************************************************************************************</p>
 

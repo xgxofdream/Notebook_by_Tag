@@ -2,26 +2,27 @@
 {% include "menu.html" %}
 <p>*****************************************************************************************************</p>
 |&nbsp&nbsp
-<a href="{{ web_url }}english/word_bench/source/0/">All</a>
-&nbsp&nbsp|&nbsp&nbsp<a href="{{ web_url }}english/list_by_word/all/"> List by Word </a>&nbsp&nbsp|
+<a href="{{ web_url }}english/list_by_word/all/"> List by Word </a>
+&nbsp&nbsp|&nbsp&nbsp<a href="{{ web_url }}">近义词</a>
+&nbsp&nbsp|&nbsp&nbsp<a href="{{ web_url }}">形近词</a>
+&nbsp&nbsp|&nbsp&nbsp<a href="{{ web_url }}">贬义词</a>
+&nbsp&nbsp|&nbsp&nbsp<a href="{{ web_url }}">褒义词</a>
+&nbsp&nbsp|&nbsp&nbsp<a href="{{ web_url }}">中性词</a>
+&nbsp&nbsp|
 
 <p>*****************************************************************************************************</p>
 <span style="font-weight: bold">Source:</span>&nbsp
     <select onchange="self.location.href=options[selectedIndex].value">
-        <option value="{{ web_url }}english/word_bench/source/0/">All</option>
-        <option value="{{ web_url }}english/word_bench/source/1/">Novels</option>
-        <option value="{{ web_url }}english/word_bench/source/2/">Poems</option>
-        <option value="{{ web_url }}english/word_bench/source/3/">Reference books</option>
-        <option value="{{ web_url }}english/word_bench/source/4/">Autobiography</option>
-        <option value="{{ web_url }}english/word_bench/source/5/">Diary</option>
-        <option value="{{ web_url }}english/word_bench/source/6/">Textbook</option>
-        <option value="{{ web_url }}english/word_bench/source/7/">Elon Mush</option>
-        <option value="{{ web_url }}english/word_bench/source/8/">王德中Cyrus</option>
-        <option value="{{ web_url }}english/word_bench/source/9/">Review Papers</option>
-        <option value="{{ web_url }}english/word_bench/source/10/">Research Papers</option>
-    </select>
+        <option value="{{ web_url }}">--------</option>
+        <option value="{{ web_url }}english/word_bench/source/all/">All</option>
+        {% for key, value in source_dict.items %}
+            <option value="{{ web_url }}english/word_bench/source/{{ key }}/">{{ key }}</option>
+
+        {% endfor %}
+   </select>
 <p>---------------------------------------------------------------------------------------------------------</p>
-<form action="{{ web_url }}english/word_bench/tag/0/" method="post"> {% csrf_token %}
+
+<form action="{{ web_url }}english/word_bench/tag/post/" method="post"> {% csrf_token %}
                 {% for key, value in tag_dict.items %}
                     <span style="font-weight: bold; font-size: 16pt">{{ key }}:&nbsp</span>
 
@@ -54,7 +55,7 @@
 <br>
     <span><input type="radio" name="intersect" value="yes"/>&nbsp&nbsp交集&nbsp&nbsp&nbsp&nbsp</span>
     <span><input type="radio" name="intersect" value="no" checked="checked"/>&nbsp&nbsp并集</span>
-    <span><input type="radio" name="type" value="tag" checked="checked"/>标签类型</span>
+    <span><input type="radio" name="method" value="tag" checked="checked"/>标签类型</span>
 <span style="font-weight: bold; text-align: center">&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp<input type="submit" value="Submit"/></span>
 </form>
 <p>*****************************************************************************************************</p>

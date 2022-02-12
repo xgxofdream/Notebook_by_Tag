@@ -31,7 +31,7 @@ urlpatterns = [
     path('tag_list/<int:id>/', views.tag_list, name='tag_list'),
 
     # Source列表
-    path('source_list/<int:id>/', views.source_list, name='source_list'),
+    path('source_list/<str:source_type>/', views.source_list, name='source_list'),
 
     # 英语笔记列表by Source
     path('list_by_source/<int:id>/', views.list_by_source, name='english_list'),
@@ -53,7 +53,7 @@ urlpatterns = [
     path('submit/', views.submit, name='submit'),
 
     # 提交到Word Bench
-    path('word_bench/<str:type>/<int:id>/', views.word_bench, name='submit'),
+    path('word_bench/<str:method>/<str:source_type>/', views.word_bench, name='submit'),
 
 
     # 提交到Word Bench
