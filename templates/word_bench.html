@@ -1,9 +1,12 @@
 {% include "head.html" %}
 {% include "menu.html" %}
 <p>*****************************************************************************************************</p>
+|&nbsp&nbsp
 <a href="{{ web_url }}english/word_bench/source/0/">All</a>
+&nbsp&nbsp|&nbsp&nbsp<a href="{{ web_url }}english/list_by_word/all/"> List by Word </a>&nbsp&nbsp|
+
 <p>*****************************************************************************************************</p>
-Source:&nbsp
+<span style="font-weight: bold">Source:</span>&nbsp
     <select onchange="self.location.href=options[selectedIndex].value">
         <option value="{{ web_url }}english/word_bench/source/0/">All</option>
         <option value="{{ web_url }}english/word_bench/source/1/">Novels</option>
@@ -17,15 +20,15 @@ Source:&nbsp
         <option value="{{ web_url }}english/word_bench/source/9/">Review Papers</option>
         <option value="{{ web_url }}english/word_bench/source/10/">Research Papers</option>
     </select>
-<p>*****************************************************************************************************</p>
+<p>---------------------------------------------------------------------------------------------------------</p>
 <form action="{{ web_url }}english/word_bench/tag/0/" method="post"> {% csrf_token %}
                 {% for key, value in tag_dict.items %}
-                    <span style="font-weight: bold">{{ key }}:&nbsp</span>
+                    <span style="font-weight: bold; font-size: 16pt">{{ key }}:&nbsp</span>
 
                     {% for list_item in value %}
                         <details style="display: inline-block;vertical-align: text-top;">
 
-                            <summary>{{ list_item }}</summary>
+                            <summary style="font-style: italic; font-weight: bold">{{ list_item }}</summary>
 
                             {% for item in all_tag_list %}
 
@@ -33,8 +36,8 @@ Source:&nbsp
 
                                     {% if item.sub01 == list_item %}
 
-                                        <input type="checkbox" name="tag_list" value="{{ item.id }}"/>
-                                        {{ item.name }}
+                                        <input type="checkbox" name="tag_list" value="{{ item.id }}"/>-
+                                        {{ item.name }}&nbsp&nbsp&nbsp
 
 
                                     {% endif %}
@@ -43,22 +46,18 @@ Source:&nbsp
 
                             {% endfor %}
                         </details>
-&nbsp&nbsp
+&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp
                     {% endfor %}
 
-
+<br>
                 {% endfor %}
-<br><br>
+<br>
     <span><input type="radio" name="intersect" value="yes"/>&nbsp&nbsp交集&nbsp&nbsp&nbsp&nbsp</span>
     <span><input type="radio" name="intersect" value="no" checked="checked"/>&nbsp&nbsp并集</span>
     <span><input type="radio" name="type" value="tag" checked="checked"/>标签类型</span>
 <span style="font-weight: bold; text-align: center">&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp<input type="submit" value="Submit"/></span>
 </form>
 <p>*****************************************************************************************************</p>
-
-<br><br>
-|&nbsp&nbsp<a href="{{ web_url }}english/list_by_word/all/"> List by Word </a>&nbsp&nbsp|
-<br><br>
 <p style="font-weight: bold; text-align: center">
     ----------------------------------------------Noun----------------------------------------------</p>
 {% for key, value in new_dict.items %}

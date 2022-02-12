@@ -3,12 +3,40 @@
 
 Source:&nbsp&nbsp
 
-
+{% for source in source %}
 <a href="{{ web_url }}english/list_by_source/{{ source.id }}/">{{ source.type }}&nbsp|&nbsp{{ source.name }}&nbsp by &nbsp{{ source.author }}</a>&nbsp&nbsp
+{% endfor %}
+<p>*************************************************************************</p>
+<form action="{{ web_url }}english/list_by_source/" method="post"> {% csrf_token %}
+
+    <details style="display: inline-block;vertical-align: text-top;">
+    <br>
+        <input type="radio" name="intersect" value="yes"/>&nbsp&nbsp交集&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp
+        <input type="radio" name="intersect" value="no" checked="checked"/>&nbsp&nbsp并集
+        <p>...................</p>
+        <summary style="font-style: italic; font-weight: bold">Tag Statistics</summary>
+    |&nbsp&nbsp
+            {% for key, value in statistics_tag.items %}
+            <input type="checkbox" name="tag_list" value="{{ value.1 }}"/>{{ key }}&nbsp&nbsp[{{ value.0 }}]&nbsp&nbsp&nbsp|&nbsp&nbsp
+            {% endfor %}
+    <br><br>
+    </details>
 
 
-<p>-----------------------------------------------------------------</p>
-{% for key, value in english_dict.items %}
+    <details style="display: inline-block;vertical-align: text-top;">
+    <summary style="font-style: italic; font-weight: bold">Source Statistics</summary>
+        {% for key, value in statistics_source.items %}
+        <input type="checkbox" name="source_list" value="{{ value.1 }}"/>{{ key }}&nbsp&nbsp[{{ value.0 }}]&nbsp&nbsp|&nbsp&nbsp
+        {% endfor %}
+    </details>
+
+    <br><br>
+    ...........................<input type="submit" value="Submit"/>...........................
+
+
+</form>
+<p>*************************************************************************</p>
+{% for key, value in english_styled.items %}
      <p>
     <a href="{{ web_url }}english/detail/{{ key }}/">
        {{ value.english_text|safe }} @id= {{ key }}

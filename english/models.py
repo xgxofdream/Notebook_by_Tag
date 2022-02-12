@@ -284,6 +284,7 @@ class English(models.Model):
         if type == 'source':
             if id == 0:
                 english = English.objects.filter(~Q(id=0))
+            # 即，反向查询。
             else:
                 # Reference的__str__一定要放回str类型的数据，不然报错！很奇怪！
                 reference = Reference.objects.filter(source_id=id)
@@ -420,6 +421,209 @@ class English(models.Model):
             'others': others
         }
         return context
+
+
+
+    '''
+    # 正向查询 English to Source
+    '''
+    def english_to_source(self, english):
+        '''
+        if isinstance(english_id_list, list):
+            english_id_list = english_id_list
+        # 一条英语笔记的查询时，english_id_list为整数，所以要转化为list
+        else:
+            english_id_list = list(str(english_id_list))
+
+        # 获取 id，获取笔记
+        english = English.objects.filter(id__in=english_id_list)
+        '''
+
+        # 初始化 字典的结构{int:{int:int}}
+        dict_english_to_source = {}
+        # 初始化 字典的结构{int:[int, []]}
+        statistics_source = {}
+
+
+        english_styled = {};
+        # 收集信息
+        for english_item in english:
+            # 收集english-source对应关系
+            reference = english_item.reference
+            source = reference.source
+            dict_english_to_source.update({english_item.id:{reference.id:source.id}})
+
+            # 调用
+            # 把笔记中的key_words 和 key_expressions高亮显示出来 via English的功能：text_highlight
+            single_english_note = english_item.text_highlight(english_item)
+            english_styled.update(single_english_note)
+
+            # 统计source的情况
+            if statistics_source.__contains__(source.name):
+                # 计数
+                statistics_source[source.name][0] = statistics_source[source.name][0] + 1
+                # 记录对应的笔记id
+                statistics_source[source.name][1].append(str(english_item.id))
+            else:
+                count = 1
+                english_id_list = list([str(english_item.id)])
+
+                statistics_source.update({source.name: [count, english_id_list]})
+
+
+        data = {
+            'reference': reference,
+            'english': english,
+            'english_styled': english_styled,
+            'source': source,
+            'dict_english_to_source': dict_english_to_source,
+            'statistics_source': statistics_source,
+        }
+        return data
+
+    '''
+    # 正向查询 English to Tag
+    '''
+    def english_to_tag(self, english):
+        '''
+        if isinstance(english_id_list, list):
+            english_id_list = english_id_list
+        # 一条英语笔记的查询时，english_id_list为整数，所以要转化为list
+        else:
+            english_id_list = list(str(english_id_list))
+
+        # 获取 id，获取笔记
+        english = English.objects.filter(id__in=english_id_list)
+        '''
+
+        # 初始化 字典的结构{int:{int:int}}
+        dict_english_to_tag = {}
+        # 初始化 字典的结构{int:[int, []]}
+        statistics_tag = {}
+
+        for english_item in english:
+            # 收集english-tags对应关系
+            tag = english_item.tag.all()
+
+            dict_english_to_tag.update({english_item.id:tag})
+            print(tag)
+
+
+            # 统计tags的情况
+            for tag_item in tag:
+                print(tag_item)
+                if statistics_tag.__contains__(tag_item.name):
+                    # 计数
+                    statistics_tag[tag_item.name][0] = statistics_tag[tag_item.name][0] + 1
+                    # 记录对应的笔记id
+                    statistics_tag[tag_item.name][1].append(str(english_item.id))
+
+                else:
+                    count = 1
+                    english_id_list = list([str(english_item.id)])
+
+                    statistics_tag.update({tag_item.name: [count, english_id_list]})
+
+            print(statistics_tag)
+
+
+
+        data = {
+            'english': english,
+            'dict_english_to_tag': dict_english_to_tag,
+            'statistics_tag': statistics_tag,
+        }
+
+        return data
+
+    '''
+    # 反向查询 Source to English
+    '''
+    def source_to_english(self, source_id_list):
+
+        if isinstance(source_id_list, list):
+            source_id_list = source_id_list
+        # 一条记录的查询时，source_id_list为整数，所以要转化为list
+        else:
+            source_id_list = list(str(source_id_list))
+
+        source = Source.objects.filter(id__in=source_id_list)
+
+        # Reference的__str__一定要放回str类型的数据，不然报错！很奇怪！
+        reference = Reference.objects.filter(source_id__in=source_id_list)
+        reference_id = reference.values('id')
+
+        english = English.objects.filter(reference_id__in=reference_id)
+
+        # 调用
+        # 把笔记中的key_words 和 key_expressions高亮显示出来 via English的功能：text_highlight
+        english_styled = {};
+
+        for item in english:
+            single_english_note = item.text_highlight(item)
+            english_styled.update(single_english_note)
+
+        data = {
+            'source': source,
+            'reference': reference,
+            'english': english,
+            'english_styled': english_styled,
+
+        }
+        return data
+
+
+    '''
+    # 反向查询 Tag to English 
+    '''
+    def tag_to_english(self, tag_id_list, intersect_or_not):
+
+        if isinstance(tag_id_list, list):
+            tag_id_list = tag_id_list
+        # 一条记录的查询时，tag_id_list为整数，所以要转化为list
+        else:
+            tag_id_list = list(str(tag_id_list))
+
+        # 实例化Tag
+        tag_set = Tag.objects.filter(id__in=tag_id_list)
+
+        arr_query = tag_id_list
+
+        for index in range(len(tag_id_list)):
+            tag_obj = Tag.objects.get(id=tag_id_list[index])
+
+            all_english_text = tag_obj.notes.all()
+
+            arr_query[index] = all_english_text
+
+        ''''''
+        # Tag的交集/并集运算
+        if intersect_or_not == 'no':
+            for index in range(len(arr_query)):
+                all_english_text = all_english_text | arr_query[index]
+
+        if intersect_or_not == 'yes':
+            for index in range(len(arr_query)):
+                all_english_text = all_english_text & arr_query[index]
+
+        # 去除重复items
+        all_english_text = all_english_text.order_by('id').distinct()
+
+        # 把笔记中的key_words 和 key_expressions高亮显示出来 via English的功能：text_highlight
+        english_styled = {};
+        for item in all_english_text:
+            single_english_note = item.text_highlight(item)
+            english_styled.update(single_english_note)
+
+        # 需要传递给模板的对象
+        data = {
+            'all_english_text': all_english_text,
+            'intersect_or_not': intersect_or_not,
+            'tag_set': tag_set,
+            'english_styled': english_styled,
+        }
+
+        return data
 
 
 

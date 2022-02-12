@@ -2,35 +2,37 @@
 {% include "menu.html" %}
 
 
-
 <form name="" action="{{ web_url }}english/list_by_tag_post/" method="post">{% csrf_token %}
     {% for key, value in tag_dict.items %}
-
-        <p style="font-weight: bold">>>{{ key }}<<</p>
-
+        <span style="font-weight: bold; font-size: 16pt">{{ key }}:&nbsp</span>
+        <br>
         {% for list_item in value %}
+            <details open style="display: inline-block;vertical-align: text-top;">
 
-            <p style="font-weight: bold">----{{ list_item }}----</p>
+                <summary style="font-style: italic; font-weight: bold">{{ list_item }}</summary>
 
-            {% for item in all_tag_list %}
+                {% for item in all_tag_list %}
 
-                {% if item.root == key %}
+                    {% if item.root == key %}
 
-                    {% if item.sub01 == list_item %}
+                        {% if item.sub01 == list_item %}
 
-                        <input type="checkbox" name="tag_list" value="{{ item.id }}"/>&nbsp&nbsp{{ item.name }}
-                        <br>
+                            <input type="checkbox" name="tag_list" value="{{ item.id }}"/>-
+                            {{ item.name }}&nbsp&nbsp&nbsp
+
+
+                        {% endif %}
 
                     {% endif %}
 
-                {% endif %}
-
-            {% endfor %}
-
+                {% endfor %}
+            </details>
+            &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp
         {% endfor %}
-        <br>
+        <br><br>
 
     {% endfor %}
+
 
     <p>-----------------------------------------------------------------------------</p>
     <p><input type="radio" name="intersect" value="yes"/>&nbsp&nbsp交集</p>

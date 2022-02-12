@@ -102,6 +102,7 @@ def list_by_tag_get(request, id):
         'all_english_text': all_english_text,
         'tag_set': tag_set,
         'english_dict': english_dict,
+
     }
 
     return render(request, 'list_by_tag.html', context)
@@ -116,49 +117,31 @@ def list_by_tag_post(request):
 
     # 获取 POST 参数
     all_tag = request.POST.getlist('tag_list')
-    intersect = request.POST.get('intersect')
+    intersect_or_not = request.POST.get('intersect')
 
-    # 实例化Tag
-    tag_set = Tag.objects.filter(id__in=all_tag)
+    # 实例化一个English
+    english = English()
 
-    arr_query = list(all_tag)
+    # 读取数据库-Table English
+    data_english = english.tag_to_english(all_tag, intersect_or_not)
 
+    # 读取对tags的统计数据
+    data_tag = english.english_to_tag(data_english['all_english_text'])
 
-    for index in range(len(all_tag)):
-        tag_obj = Tag.objects.get(id=all_tag[index])
+    # 读取对sources的统计数据
+    data_source = english.english_to_source(data_english['all_english_text'])
 
-        all_english_text = tag_obj.notes.all()
-
-        arr_query[index] = all_english_text
-
-
-    ''''''
-    # Tag的交集/并集运算
-    if intersect == 'no':
-        for index in range(len(arr_query)):
-            all_english_text = all_english_text | arr_query[index]
-
-
-    if intersect == 'yes':
-        for index in range(len(arr_query)):
-            all_english_text = all_english_text & arr_query[index]
-
-    # 去除重复items
-    all_english_text = all_english_text.order_by('id').distinct()
-
-    # 把笔记中的key_words 和 key_expressions高亮显示出来 via English的功能：text_highlight
-    english_dict = {};
-    for item in all_english_text:
-        single_english_note = item.text_highlight(item)
-        english_dict.update(single_english_note)
 
 
     # 需要传递给模板的对象
     context = {
-        'all_english_text': all_english_text,
-        'intersect_or_not': intersect,
-        'tag_set': tag_set,
-        'english_dict': english_dict,
+        'all_english_text': data_english['all_english_text'],
+        'intersect_or_not': data_english['intersect_or_not'],
+        'tag_set': data_english['tag_set'],
+        'english_styled': data_english['english_styled'],
+        'statistics_tag': data_tag['statistics_tag'],
+        'dict_english_to_tag': data_tag['dict_english_to_tag'],
+        'statistics_source': data_source['statistics_source'],
     }
 
     return render(request, 'list_by_tag.html', context)
@@ -168,31 +151,28 @@ def list_by_tag_post(request):
 '''
 def list_by_source(request, id):
 
-    source = Source.objects.get(id=id)
+    # 实例化一个English
+    english = English()
 
-    # Reference的__str__一定要放回str类型的数据，不然报错！很奇怪！
-    reference = Reference.objects.filter(source_id=id)
-    reference_id = reference.values('id')
+    # 读取数据库-Table English
+    data_english = english.source_to_english(id)
 
-    english = English.objects.filter(reference_id__in=reference_id)
+    # 读取对tags的统计数据
+    data_tag = english.english_to_tag(data_english['english'])
 
-
-
-    # 调用
-    # 把笔记中的key_words 和 key_expressions高亮显示出来 via English的功能：text_highlight
-    english_dict = {};
-
-    for item in english:
-
-        single_english_note = item.text_highlight(item)
-        english_dict.update(single_english_note)
+    # 读取对sources的统计数据
+    data_source = english.english_to_source(data_english['english'])
 
 
     context = {
-        'reference': reference,
-        'english': english,
-        'english_dict': english_dict,
-        'source': source,
+        'source': data_english['source'],
+        'reference': data_english['reference'],
+        'english': data_english['english'],
+        'english_styled': data_english['english_styled'],
+        'statistics_tag': data_tag['statistics_tag'],
+        'dict_english_to_tag': data_tag['dict_english_to_tag'],
+        'statistics_source': data_source['statistics_source'],
+
     }
 
     return render(request, 'list_by_source.html', context)

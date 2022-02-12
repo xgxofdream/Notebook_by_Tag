@@ -2,12 +2,20 @@
 {% include "menu.html" %}
 
 <p style="font-weight: bold; text-align: center">**********************上一次录入笔记的信息**********************</p>
-<p style="font-weight: bold">|&nbsp&nbsp{{ source.name }}&nbsp&nbsp|&nbsp&nbsp{{ last_reference.english_text_location }}&nbsp&nbsp|</p>
-<textarea id=" " name="" rows="2" cols="100">{{ last_english_text }}</textarea>
+<table>
+    <tr>
+        <td style="text-align: center">
+            <p style="font-weight: bold">
+                |&nbsp&nbsp{{ source.name }}&nbsp&nbsp|&nbsp&nbsp{{ last_reference.english_text_location }}&nbsp&nbsp|</p>
+            <textarea style="font-size:16pt;" id=" " name="" rows="6" cols="100">{{ last_english_text }}</textarea>
 
-
+        </td>
+    </tr>
+</table>
 <br><br><br>
+
 <p style="font-weight: bold; text-align: center">**********************录入这次的英语笔记**********************</p>
+
 
 <form action="{{ web_url }}english/submit/" method="post"> {% csrf_token %}
 
@@ -19,6 +27,7 @@
         <tr>
             <td>
                 <p style="font-weight: bold">>>标签<<</p>
+
                 {% for key, value in tag_dict.items %}
 
                     <p style="font-weight: bold">>>{{ key }}<<</p>
@@ -49,7 +58,6 @@
                     <br>
 
                 {% endfor %}
-
             </td>
             <td>
 
@@ -58,7 +66,8 @@
 
                 {% for item in reference_range %}
 
-                    {% if forloop.first %}<input type="radio" name="reference" checked="checked" value="{{ item.id }}"/>
+                    {% if forloop.first %}
+                        <input type="radio" name="reference" checked="checked" value="{{ item.id }}"/>
                         -
                         {{ item.english_text_location }}&nbsp&nbsp
                     {% else %}<input type="radio" name="reference" value="{{ item.id }}"/>-
@@ -68,24 +77,30 @@
                 {% endfor %}
 
                 <p style="font-weight: bold">>>正文<<</p>
-                <textarea id=" " name="english_text" rows="2" cols="100"></textarea>
+                <textarea style="font-size: 20pt" id=" " name="english_text" rows="6" cols="100"></textarea>
                 <p style="font-weight: bold">>>其他<<</p>
                 Key_words:<br>
-                <input type="text" style="width:100%; height:20px;" name="key_words" value="">
+                <input type="text" style="width:100%; height:30px; font-size: 20pt" name="key_words"
+                       value="">
                 <br><br>
                 Key_expressions:<br>
-                <input type="text" style="width:100%; height:20px;" name="key_expressions" value="">
+                <input type="text" style="width:100%; height:30px; font-size: 20pt" name="key_expressions"
+                       value="">
                 <br><br>
                 Words_to_learn:<br>
-                <input type="text" style="width:100%; height:20px;" name="words_to_learn" value="">
+                <input type="text" style="width:100%; height:30px; font-size: 20pt" name="words_to_learn"
+                       value="">
                 <br><br>
                 Note:<br>
-                <textarea id=" " name="note" rows="2" cols="100"></textarea>
+                <textarea style="font-size: 20pt" id=" " name="note" rows="6" cols="100"></textarea>
                 <br><br>
                 Category:<br>
-                <input type="text" style="width:100%; height:20px;" name="category" value="">
+                <input type="text" style="width:100%; height:30px; font-size: 20pt" name="category"
+                       value="">
                 <br><br><br>
-                <p style="font-weight: bold; text-align: center">**********************<input type="submit" value="Submit"/>**********************</p>
+                <p style="font-weight: bold; text-align: center">**********************<input type="submit"
+                                                                                              value="Submit"/>**********************
+                </p>
 
                 <br>
             </td>
