@@ -47,6 +47,25 @@ def index(request):
 
 
 '''
+# 列出Reference
+'''
+def reference_list(request, source_id):
+    # 初始化 context
+    context = {}
+
+    reference = Reference.objects.filter(source_id=source_id)
+
+
+
+    context.update({
+        'reference': reference,
+        'source_id':source_id,
+    })
+
+    return render(request, 'reference_list.html', context)
+
+
+'''
 # 列出Source
 '''
 def source_list(request, source_type):
@@ -226,9 +245,9 @@ def english_detail(request, id):
         # 创建音频
         text = english_text_detail.english_text
         audio_name = str(english_text_detail.id) + '.mp3'
-        audio_src = audio_src + audio_name
+        audio_file_location = audio_src + audio_name
         tts = gTTS(text)
-        tts.save(audio_src)
+        tts.save(audio_file_location)
         # 并把名字记入数据库
         english_text_detail.audio_name = audio_name
         english_text_detail.save()
@@ -413,8 +432,10 @@ def input(request, id):
         # 找出书名
         source = Source.objects.get(id=id)
 
-        # 找出当前有笔记的页码往后10页的范围
-        reference_range = reference.filter(id__in = range(last_reference.id,last_reference.id+8))
+        # 找出当前有笔记的页码往后10页的范围。id__gt是大于的意思，[:8]是切片。
+        reference_range = reference.order_by('id').filter(id__gte=last_reference.id)[:10]
+
+        # reference_range = reference.filter(id__in = range(last_reference.id,last_reference.id+8))
         print(reference_range)
 
     # 如果Table English没有记录。
@@ -431,7 +452,7 @@ def input(request, id):
         last_reference = reference.all().first()
         print(last_reference.id)
 
-        reference_range = reference.all()[0:8]
+        reference_range = reference.order_by('id').all()[:10]
         print(reference_range)
 
     #####################################################
@@ -551,9 +572,9 @@ def submit(request):
     # 创建音频
     text = english_text
     audio_name = str(english.id) + '.mp3'
-    audio_src = audio_src + audio_name
+    audio_file_location = audio_src + audio_name
     tts = gTTS(text)
-    tts.save(audio_src)
+    tts.save(audio_file_location)
     # 并把名字记入数据库
     english.audio_name = audio_name
     english.save()
@@ -567,3 +588,44 @@ def submit(request):
         context = {'submission_result': submission_result, 'all_data': all_data, 'input_url': input_url,
                    'time_dalay': time_dalay}
         return render(request, 'submit.html', context)
+
+
+'''
+# 录入Reference
+'''
+def submit_reference(request):
+
+    all_data = request.body
+    source_id = request.POST.get('source_id')
+    start_page = request.POST.get('start_page')
+    start_page = int(start_page)
+    end_page = request.POST.get('end_page')
+    end_page = int(end_page)
+
+    while start_page <= end_page:
+        page = 'Page '+str(start_page)
+        start_page = start_page + 1
+
+        # 实例化
+        reference = Reference()
+
+        # 获取页码
+        reference.english_text_location = page
+        reference.source_id = source_id
+
+        #print(page)
+
+        # 写入数据库
+        reference.save()
+
+        print(reference.save())
+
+    # 回到原页面
+    input_url = web_url + "english/reference_list/" + str(source_id) + "/"
+    submission_result = "Succeed!"
+    time_dalay = 1500
+    context = {'submission_result': submission_result, 'input_url': input_url,
+               'time_dalay': time_dalay}
+    return render(request, 'submit.html', context)
+
+

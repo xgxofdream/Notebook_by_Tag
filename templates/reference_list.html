@@ -1,0 +1,27 @@
+{% include "head.html" %}
+{% include "menu.html" %}
+
+|&nbsp&nbsp
+{% for item in reference %}
+    {{ item.english_text_location }}&nbsp&nbsp&nbsp|&nbsp&nbsp
+{% endfor %}
+<br><br><br><br><br><br>
+<form action="{{ web_url }}english/submit_reference/" method="post"> {% csrf_token %}
+    <p style="font-weight: bold; text-align: center">************************************************************************************************
+                </p>
+<br>
+    <p style="text-align: center">Start Page:&nbsp&nbsp&nbsp&nbsp<input type="text" style="width:100px; height:30px; font-size: 20pt" name="start_page" value="">
+    &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp
+    End Page:&nbsp&nbsp&nbsp&nbsp<input type="text" style="width:100px; height:30px; font-size: 20pt" name="end_page" value=""></p>
+        <input type="hidden" style="width:50px; height:30px; font-size: 20pt" name="source_id" value="{{ source_id }}">
+    <br>
+    <p style="font-weight: bold; text-align: center">********************************************<input type="submit" value="Submit"/>********************************************
+                </p>
+
+</form>
+
+
+{% include "foot.html" %}
+
+
+

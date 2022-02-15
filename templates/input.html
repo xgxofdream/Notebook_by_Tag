@@ -6,7 +6,7 @@
     <tr>
         <td style="text-align: center">
             <p style="font-weight: bold">
-                |&nbsp&nbsp{{ source.name }}&nbsp&nbsp|&nbsp&nbsp{{ last_reference.english_text_location }}&nbsp&nbsp|</p>
+                |&nbsp&nbsp{{ source.type }}&nbsp&nbsp|&nbsp&nbsp{{ source.name }}&nbsp&nbsp|&nbsp&nbsp{{ last_reference.english_text_location }}&nbsp&nbsp|</p>
             <textarea style="font-size:16pt;" id=" " name="" rows="6" cols="100">{{ last_english_text }}</textarea>
 
         </td>
@@ -16,7 +16,8 @@
 
 <p style="font-weight: bold; text-align: center">**********************录入这次的英语笔记**********************</p>
 
-
+<p style="font-weight: bold; text-align: center">
+                |&nbsp&nbsp{{ source.type }}&nbsp&nbsp|&nbsp&nbsp{{ source.name }}&nbsp&nbsp|</p>
 <form action="{{ web_url }}english/submit/" method="post"> {% csrf_token %}
 
 
@@ -25,7 +26,7 @@
 
     <table>
         <tr>
-            <td>
+            <td style="width: 10%">
                 <p style="font-weight: bold">>>标签<<</p>
 
                 {% for key, value in tag_dict.items %}

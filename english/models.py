@@ -454,11 +454,14 @@ class English(models.Model):
                 statistics_source[source.name][0] = statistics_source[source.name][0] + 1
                 # 记录对应的笔记id
                 statistics_source[source.name][1].append(str(english_item.id))
+                # 记录对应的笔记的source_type
+                statistics_source[source.name][2] =source.type
             else:
                 count = 1
                 english_id_list = list([str(english_item.id)])
+                source_type = source.type
 
-                statistics_source.update({source.name: [count, english_id_list]})
+                statistics_source.update({source.name: [count, english_id_list, source_type]})
 
 
         data = {

@@ -2,7 +2,8 @@
 
 {% include "menu.html" %}
 
-
+<p style="font-size: 30pt; text-align: center">English Note</p>
+<br><br>
 <table>
     <tr>
         <td style="font-size: 30px; width:15%;">Text</td>
@@ -35,6 +36,7 @@
 
 </table>
 
+
 <br>
 <audio controls>
     <source src="{{ MEDIA_URL }}english/text_to_speech/{{ english_text_detail.audio_name }}" type="audio/mpeg">
@@ -57,4 +59,30 @@ Tag:&nbsp&nbsp
 
 {% endfor %}
 <p>--------------------------------------------------------------</p>
+
+
+<br><br><br>
+<details>
+<summary style="font-size: 30pt; text-align: center">Source Info</summary>
+
+<table>
+    <tr>
+        <td style="font-weight: bold">Source</td>
+        <td>{{ source.type }}&nbsp&nbsp|&nbsp&nbsp{{ source.name }}</td>
+    </tr>
+    <tr>
+        <td style="font-weight: bold">Source Summary</td>
+        <td>{{ source.summary }}</td>
+    </tr>
+    <tr>
+        <td style="font-weight: bold">Reference</td>
+        <td>{{ reference.english_text_location }}</td>
+    </tr>
+    <tr>
+        <td style="font-weight: bold">Reference Note</td>
+        <td>{{ reference.note }}</td>
+    </tr>
+
+</table>
+</details>
 {% include "foot.html" %}

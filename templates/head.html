@@ -32,6 +32,110 @@
             background-color: #dddddd;
         }
     </style>
+    <!-- 控制头部的播放器 -->
+    <script type="text/javascript">
+
+        function checkboxed(objName) {
+            var objNameList = document.getElementsByName(objName);
+
+            if (null != objNameList) {
+                //alert("全选操作");
+                for (var i = 0; i < objNameList.length; i++) {
+                    objNameList[i].checked = "checked";
+                }
+            }
+        }
+
+        function uncheckboxed(objName) {
+            var objNameList = document.getElementsByName(objName);
+
+            if (null != objNameList) {
+                //alert("取消全选操作");
+                for (var i = 0; i < objNameList.length; i++) {
+                    objNameList[i].checked = "";
+                }
+            }
+        }
+
+
+        // 获取笔记
+        function english() {
+            var obj = document.getElementsByName('english_text');
+
+            var cycle_to_play = 3;
+            cycle_to_play = ~~document.getElementsByName('cycle_to_play')[0].value; // ~~语法：string to number
+
+            var english_text = [];
+            for (var i = 0; i < obj.length; i++) {
+                if (obj[i].checked)
+                    english_text.push(obj[i].value);
+            }
+            if (english_text.length == 0) {
+                alert('你还没有选择任何内容！');
+            }
+
+            return {
+                'english_text': english_text,
+                'cycle_to_play': cycle_to_play,
+            }
+        }
+
+        //播放笔记
+        function playEnglish() {
+
+            var english_text = english().english_text;
+            var cycle_to_play = english().cycle_to_play;
+
+            if (english_text.length != 0) {
+                var myAudio = new Audio();
+                myAudio.style = "width: 200px; height: 50px";
+                myAudio.preload = true;
+                myAudio.controls = true;
+                myAudio.loop = false;//禁止循环，否则无法触发ended事件
+                myAudio.addEventListener('ended', playEndedHandler, false);
+
+                document.getElementById("spacer").style.display = ""
+                document.getElementById("audioBox").appendChild(myAudio);
+
+                var src = english_text.pop();//pop()将最后一个音频删除，同时它返回值就是最后一个音频
+                english_text.unshift(src);   //unshift(src)将上面pop()所删除音频添加到数组开头，这样实现循环
+
+                myAudio.src = src;         //src就是pop()所删除的音频
+                myAudio.play();
+            }
+
+            //循环控制函数
+            var piece_played = 1;
+            var cycle_played = 0;
+
+            function playEndedHandler() {
+
+                piece_played = piece_played + 1;
+
+                cycle_played = piece_played / english_text.length
+
+                if (cycle_played <= cycle_to_play) {
+
+                    src = english_text.pop();
+                    english_text.unshift(src);
+
+                    myAudio.src = src;
+                    myAudio.play();
+                }
+
+
+            }
+        }
+
+    </script>
+
+    <!-- 控制正文播放器 -->
+    <script>
+        var tag = 1;
+
+    </script>
+
+
     <meta charset="UTF-8">
     <title>Index | Notebook</title>
 </head>

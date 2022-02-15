@@ -27,6 +27,12 @@ urlpatterns = [
 
     # 来源列表
 
+    # Reference
+    path('reference_list/<int:source_id>/', views.reference_list, name='reference_list'),
+
+    # Reference input
+    path('submit_reference/', views.submit_reference, name='reference_list'),
+
     # Tag列表
     path('tag_list/<int:id>/', views.tag_list, name='tag_list'),
 
