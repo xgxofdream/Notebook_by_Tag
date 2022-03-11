@@ -1,24 +1,68 @@
 {% include "head.html" %}
 {% include "menu.html" %}
 
-<p style="font-weight: bold; text-align: center">**********************上一次录入笔记的信息**********************</p>
+<p style="font-weight: bold; text-align: center">**********************笔记的原始信息**********************</p>
+
 <table>
+
     <tr>
-        <td style="text-align: center">
+        <td style="font-weight: bold">Source</td>
+        <td>
             <p style="font-weight: bold">
-                |&nbsp&nbsp{{ source.type }}&nbsp&nbsp|&nbsp&nbsp{{ source.name }}&nbsp&nbsp|&nbsp&nbsp{{ last_reference.english_text_location }}&nbsp&nbsp|</p>
-            <textarea style="font-size:16pt;" id=" " name="" rows="6" cols="100">{{ last_english_text }}</textarea>
+                |&nbsp&nbsp{{ source.type }}&nbsp&nbsp|&nbsp&nbsp{{ source.name }}&nbsp&nbsp|&nbsp&nbsp{{ reference_current.english_text_location }}&nbsp&nbsp|&nbsp&nbspID:&nbsp<a
+                    href="{{ web_url }}english/detail/{{ english.id }}/">{{ english.id }}</a>&nbsp&nbsp|</p>
+        </td>
+    </tr>
+
+    <tr>
+        <td style="font-weight: bold">Text</td>
+        <td style="font-size: 30px;">
+
+            {% for key, value in english_dict.items %}
+
+                {{ value.english_text|safe }}
+
+            {% endfor %}
 
         </td>
     </tr>
+    <tr>
+        <td style="font-weight: bold">Lable:Notes</td>
+        <td>
+            {% for key, value in statistics_tag.items %}
+
+
+                {{ key }}:&nbsp&nbsp{{ value.2 }}<br>
+
+
+            {% endfor %}
+
+        </td>
+    </tr>
+
+    <tr>
+        <td style="font-weight: bold">Element</td>
+        <td>
+            {{ element2 }}
+
+        </td>
+    </tr>
+
+    <tr>
+        <td style="font-weight: bold">Notes</td>
+        <td>
+            {{ english.note }}
+
+        </td>
+    </tr>
+
+
 </table>
 <br><br><br>
 
-<p style="font-weight: bold; text-align: center">**********************录入这次的英语笔记**********************</p>
+<p style="font-weight: bold; text-align: center">**********************更新这条英语笔记**********************</p>
 
-<p style="font-weight: bold; text-align: center">
-    |&nbsp&nbsp{{ source.type }}&nbsp&nbsp|&nbsp&nbsp{{ source.name }}&nbsp&nbsp|</p>
-<form action="{{ web_url }}english/submit/" method="post"> {% csrf_token %}
+<form action="{{ web_url }}english/submit_update/{{ english.id }}/" method="post"> {% csrf_token %}
 
 
     <br><br>
@@ -48,18 +92,18 @@
         <tr>
             <td style="text-align: center">
                 <p style="font-weight: bold">>>正文<<</p>
-                <textarea style="font-size: 20pt" id=" " name="english_text" rows="6" cols="100"></textarea>
+                <textarea style="font-size: 20pt" id=" " name="english_text" rows="6"
+                          cols="100">{{ english.english_text }}</textarea>
                 <br><br>
             </td>
         </tr>
         <tr>
             <td style="text-align: center">
                 <p style="font-weight: bold">>>Note:<<</p>
-                <textarea style="font-size: 20pt" id=" " name="note" rows="4" cols="100"></textarea>
+                <textarea style="font-size: 20pt" id=" " name="note" rows="4" cols="100">{{ english.note }}</textarea>
                 <br><br>
             </td>
         </tr>
-
         <tr>
             <td style="width:100%">
                 {% for key, value in tag_dict.items %}
@@ -77,12 +121,15 @@
 
                                     {% if item.sub01 == list_item %}
 
-                                        <input type="checkbox" name="tag_list" value="{{ item.id }}"/>-
+                                        <input type="checkbox" name="tag_list" id="{{ item.id}}" value="{{item.id}}"/>-
                                         {{ item.name }}&nbsp&nbsp&nbsp
 
                                         {% if item.sub01 != '学术类' and item.sub01 != '专业类' and item.sub01 != '语法类' %}
-                                            <input type="text" name="{{ item.id }}" value=""
-                                                   style="width:1600px; height:30px; font-size: 20pt"/>
+                                            <input style="width:1600px; height:30px; font-size: 20pt;text-align: left" type="text"
+                                                   name="{{ item.id }}" value="{% for key, value in statistics_tag.items %}{% if key == item.name %}{{ value.2 }}{% endif %}{% endfor %}
+                                             "/>
+
+
                                         {% else %}
                                             <input type="hidden" name="{{ item.id }}" value=""/>
 

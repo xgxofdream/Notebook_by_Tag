@@ -68,7 +68,20 @@ urlpatterns = [
     # 我的总结
     path('summary/', views.summary, name='submit'),
 
+    # Note review, 对关键字和关键表达逐一review，匹配tag，给summary做准备
+    path('element_review/<int:id>/', views.element_review, name='element_review'),
+
+    # List for element
+    path('list_for_element/', views.list_for_element, name='list_for_element'),
+
+    # Update
+    path('update/<int:english_id>/', views.update, name='element_review'),
+
+    # Submit update
+    path('submit_update/<int:english_id>/', views.submit_update, name='submit_update'),
 
 
+    # extra
+    path('clean/', views.clean, name='clean'),
 
 ]

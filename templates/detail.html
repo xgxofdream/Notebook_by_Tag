@@ -2,7 +2,7 @@
 
 {% include "menu.html" %}
 
-<p style="font-size: 30pt; text-align: center">English Note</p>
+<p style="font-size: 30pt; text-align: center">English Note&nbsp&nbsp|&nbsp&nbsp<a href="{{ web_url }}english/update/{{ english_text_detail.id }}/"><span style="font-weight: normal">Update</a></p>
 <br><br>
 <table>
     <tr>
@@ -18,19 +18,22 @@
         </td>
     </tr>
     <tr>
-        <td style="font-weight: bold">Keywords</td>
-        <td>{{ english_text_detail.key_words }}</td>
+        <td style="font-weight: bold">Words & Expressions @ Labels</td>
+        <td>
+            {% for key, value in statistics_tag.items %}
+
+
+                    {{ key }}:&nbsp&nbsp{{ value.2 }}<br>
+
+
+            {% endfor %}
+
+        </td>
     </tr>
+
+
     <tr>
-        <td style="font-weight: bold">Key_expressions</td>
-        <td>{{ english_text_detail.key_expressions }}</td>
-    </tr>
-    <tr>
-        <td style="font-weight: bold">Words_to_learn</td>
-        <td>{{ english_text_detail.words_to_learn }}</td>
-    </tr>
-    <tr>
-        <td style="font-weight: bold">Note</td>
+        <td style="font-weight: bold">Notes</td>
         <td>{{ english_text_detail.note }}</td>
     </tr>
 
@@ -63,26 +66,26 @@ Tag:&nbsp&nbsp
 
 <br><br><br>
 <details>
-<summary style="font-size: 30pt; text-align: center">Source Info</summary>
+    <summary style="font-size: 30pt; text-align: center">Source Info</summary>
 
-<table>
-    <tr>
-        <td style="font-weight: bold">Source</td>
-        <td>{{ source.type }}&nbsp&nbsp|&nbsp&nbsp{{ source.name }}</td>
-    </tr>
-    <tr>
-        <td style="font-weight: bold">Source Summary</td>
-        <td>{{ source.summary }}</td>
-    </tr>
-    <tr>
-        <td style="font-weight: bold">Reference</td>
-        <td>{{ reference.english_text_location }}</td>
-    </tr>
-    <tr>
-        <td style="font-weight: bold">Reference Note</td>
-        <td>{{ reference.note }}</td>
-    </tr>
+    <table>
+        <tr>
+            <td style="font-weight: bold">Source</td>
+            <td>{{ source.type }}&nbsp&nbsp|&nbsp&nbsp{{ source.name }}</td>
+        </tr>
+        <tr>
+            <td style="font-weight: bold">Source Summary</td>
+            <td>{{ source.summary }}</td>
+        </tr>
+        <tr>
+            <td style="font-weight: bold">Reference</td>
+            <td>{{ reference.english_text_location }}</td>
+        </tr>
+        <tr>
+            <td style="font-weight: bold">Reference Note</td>
+            <td>{{ reference.note }}</td>
+        </tr>
 
-</table>
+    </table>
 </details>
 {% include "foot.html" %}

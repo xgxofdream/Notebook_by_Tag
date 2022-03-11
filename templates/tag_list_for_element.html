@@ -1,0 +1,46 @@
+{% include "head.html" %}
+{% include "menu.html" %}
+
+
+<form name="" action="{{ web_url }}english/list_for_element/" method="post">{% csrf_token %}
+    {% for key, value in tag_dict.items %}
+        <span style="font-weight: bold; font-size: 16pt">{{ key }}:&nbsp</span>
+        <br>
+        {% for list_item in value %}
+            <details open style="display: inline-block;vertical-align: text-top;">
+
+                <summary style="font-style: italic; font-weight: bold">{{ list_item }}</summary>
+
+                {% for item in all_tag_list %}
+
+                    {% if item.root == key %}
+
+                        {% if item.sub01 == list_item %}
+
+                            <input type="checkbox" name="tag_list" value="{{ item.id }}"/>-
+                            {{ item.name }}&nbsp&nbsp&nbsp
+
+
+                        {% endif %}
+
+                    {% endif %}
+
+                {% endfor %}
+            </details>
+            &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp
+        {% endfor %}
+        <br><br>
+
+    {% endfor %}
+
+
+    <p>-----------------------------------------------------------------------------</p>
+    <p><input type="radio" name="intersect" value="yes"/>&nbsp&nbsp交集</p>
+    <p><input type="radio" name="intersect" value="no" checked="checked"/>&nbsp&nbsp并集</p>
+
+    **********************<input type="submit" value="Submit"/>**********************
+    <br><br>
+
+</form>
+
+{% include "foot.html" %}

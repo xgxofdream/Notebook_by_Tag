@@ -1,24 +1,57 @@
 {% include "head.html" %}
 {% include "menu.html" %}
 
+<details>
+<summary style="font-size: 20px; font-weight: bold"> {{ source.type }}&nbsp&nbsp&nbsp|&nbsp&nbsp{{ source.name }}</summary>
+
+<br>
 |&nbsp&nbsp
 {% for item in reference %}
     {{ item.english_text_location }}&nbsp&nbsp&nbsp|&nbsp&nbsp
 {% endfor %}
-<br><br><br><br><br><br>
-<form action="{{ web_url }}english/submit_reference/" method="post"> {% csrf_token %}
-    <p style="font-weight: bold; text-align: center">************************************************************************************************
-                </p>
-<br>
-    <p style="text-align: center">Start Page:&nbsp&nbsp&nbsp&nbsp<input type="text" style="width:100px; height:30px; font-size: 20pt" name="start_page" value="">
-    &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp
-    End Page:&nbsp&nbsp&nbsp&nbsp<input type="text" style="width:100px; height:30px; font-size: 20pt" name="end_page" value=""></p>
-        <input type="hidden" style="width:50px; height:30px; font-size: 20pt" name="source_id" value="{{ source_id }}">
-    <br>
-    <p style="font-weight: bold; text-align: center">********************************************<input type="submit" value="Submit"/>********************************************
-                </p>
+</details>
 
-</form>
+<br><br><br>
+<div style="display: {{ display_page_relevant }};">
+    <form action="{{ web_url }}english/submit_reference/" method="post"> {% csrf_token %}
+        <p style="font-weight: bold; text-align: center">
+            ************************************************************************************************
+        </p>
+        <br>
+        <p style="text-align: center">Start Page:&nbsp&nbsp&nbsp&nbsp<input type="text"
+                                                                            style="width:100px; height:30px; font-size: 20pt"
+                                                                            name="start_page" value="">
+            &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp
+            End Page:&nbsp&nbsp&nbsp&nbsp<input type="text" style="width:100px; height:30px; font-size: 20pt"
+                                                name="end_page" value=""></p>
+        <input type="hidden" style="width:50px; height:30px; font-size: 20pt" name="source_id" value="{{ source_id }}">
+        <br>
+        <p style="font-weight: bold; text-align: center">********************************************<input
+                type="submit" value="Submit"/>********************************************
+        </p>
+
+    </form>
+</div>
+
+<div style="display: {{ display_page_irrelevant }}">
+    <form action="{{ web_url }}english/submit_reference/" method="post"> {% csrf_token %}
+        <p style="font-weight: bold; text-align: center">
+            ************************************************************************************************
+        </p>
+        <br>
+        <p style="text-align: center">Reference Title</p>
+        <p style="text-align: center"><input type="text" style="width:1000px; height:30px; font-size: 20pt" name="reference_title" value=""></p>
+        <br><br>
+        <p style="text-align: center">Reference Note</p>
+        <p style="text-align: center"><textarea style="font-size: 14pt" name="reference_note" rows="12" cols="160"></textarea></p>
+        <input type="hidden" style="width:50px; height:30px; font-size: 20pt" name="source_id" value="{{ source_id }}">
+        <br>
+        <p style="font-weight: bold; text-align: center">********************************************<input
+                type="submit" value="Submit"/>********************************************
+        </p>
+
+    </form>
+</div>
 
 
 {% include "foot.html" %}

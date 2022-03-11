@@ -50,8 +50,20 @@ def index(request):
 # 列出Reference
 '''
 def reference_list(request, source_id):
-    # 初始化 context
+    # 初始化 context, source_type
     context = {}
+    display_page_relevant = ''
+    display_page_irrelevant = ''
+
+    source = Source.objects.get(id=source_id)
+
+
+    if source.type == 'UQ Email':
+        display_page_relevant = 'none'
+        display_page_irrelevant = ''
+    else:
+        display_page_relevant = ''
+        display_page_irrelevant = 'none'
 
     reference = Reference.objects.filter(source_id=source_id)
 
@@ -60,9 +72,14 @@ def reference_list(request, source_id):
     context.update({
         'reference': reference,
         'source_id':source_id,
+        'source': source,
+        'display_page_relevant':display_page_relevant,
+        'display_page_irrelevant':display_page_irrelevant,
     })
 
     return render(request, 'reference_list.html', context)
+
+
 
 
 '''
@@ -122,6 +139,7 @@ def list_by_tag_get(request, id):
     for item in all_english_text:
         single_english_note = item.text_highlight(item)
         english_styled.update(single_english_note)
+
 
 
     # 实例化一个English
@@ -230,6 +248,7 @@ def english_detail(request, id):
     english_dict.update(single_english_note)
 
 
+
     # 获取对应的Reference实例
     reference = english_text_detail.reference
 
@@ -238,6 +257,12 @@ def english_detail(request, id):
 
     # 正向查询:获取对应的Tag实例;
     tag = english_text_detail.tag.all()
+
+    # 正向查询:获取Element对应的Tag实例;
+    element = Element()
+    element2 = Element.objects.filter(english_id=id)
+    data = element.element_to_tag(element2)
+    statistics_tag = data['statistics_tag']
 
     # 如果没有音频，则创建音频
     if english_text_detail.audio_name == None:
@@ -261,6 +286,8 @@ def english_detail(request, id):
         'reference': reference,
         'tag': tag,
         'source': source,
+        'element': element,
+        'statistics_tag':statistics_tag,
     }
 
     # 载入模板，并返回context对象
@@ -410,7 +437,7 @@ def input(request, id):
     # 在Referecen表中查询source_id=id的所有记录（即，这本书的所有页码）
     reference = Reference.objects.filter(source_id=id)
 
-    ''' 
+    '''
     找到所有英语笔记-->找到最后一条笔记
     '''
     # 在English表中查询能匹配这个reference的所有记录（即，reference_id__in=reference）。它的意思就是在这本书所以页码名下的所有英语笔记。
@@ -420,40 +447,38 @@ def input(request, id):
     if all_english_text:
         # 找出最后一条记录（即，最后一条英语笔记）
         last_english_text = all_english_text.order_by('id').last()
-        print(last_english_text)
+        #print(last_english_text)
 
         last_reference = last_english_text.reference
 
-        print(last_reference.id)
+        #print(last_reference.id)
 
-        ''' 
+        '''
         列出最新笔记所在页码之后的10页，即 last_reference.id+10
         '''
         # 找出书名
         source = Source.objects.get(id=id)
 
-        # 找出当前有笔记的页码往后10页的范围。id__gt是大于的意思，[:8]是切片。
+        # 找出当前有笔记的页码往后10页的范围 # 有问题：当不是连续输入的referncence
         reference_range = reference.order_by('id').filter(id__gte=last_reference.id)[:10]
-
-        # reference_range = reference.filter(id__in = range(last_reference.id,last_reference.id+8))
-        print(reference_range)
+        #print(reference_range)
 
     # 如果Table English没有记录。
     else:
-        ''' 
+        '''
         列出页码1-5
         '''
         # 找出书名
         source = Source.objects.get(id=id)
         #
         last_english_text = None
-        print(last_english_text)
+        #print(last_english_text)
 
         last_reference = reference.all().first()
-        print(last_reference.id)
+        #print(last_reference.id)
 
         reference_range = reference.order_by('id').all()[:10]
-        print(reference_range)
+        #print(reference_range)
 
     #####################################################
     ############# listing Tags #######################
@@ -476,7 +501,7 @@ def input(request, id):
         tag_dict[every_key] = list(set(tag_dict[every_key]))
 
 
-    print(tag_dict)
+
     #####################################################
 
     context = {
@@ -498,9 +523,7 @@ def submit(request):
     # 获取 POST 参数
     all_data = request.body
     english_text = request.POST.get('english_text')
-    key_words = request.POST.get('key_words')
-    key_expressions = request.POST.get('key_expressions')
-    words_to_learn = request.POST.get('words_to_learn')
+
     note = request.POST.get('note')
     # category = request.POST.get('category')
     reference = request.POST.get('reference')
@@ -508,7 +531,47 @@ def submit(request):
     modified_time = datetime.datetime.now()
     author = 10
 
+    ##############读取各个Tag下的不笔记数据，并整理成字典########################
+    # 调用Tag数据，用于比对input.html中的name和tag.id
+    all_tag = Tag().tag_list(0)
+    all_tag_list = all_tag['all_tag_list']
+    note_dict = {}
 
+
+    # 将笔记按照tag.id整理成字典
+    for item in all_tag_list:
+
+        key_words = []
+        key_expressions = []
+
+
+        data = request.POST.get(str(item.id))
+        note_list = data.split(',')
+
+        # 去掉列表note_list中每一个元素的首尾空格
+        for i, val in enumerate(note_list):
+            note_list[i] = val.strip(' ')
+
+
+        # 将句子和单词分开整理
+        for note_item in note_list:
+            if ' ' in note_item:
+                key_expressions.append(note_item)
+            else:
+                key_words.append(note_item)
+
+        # 去掉list中的空值
+        while '' in key_expressions:
+            key_expressions.remove('')
+        while '' in key_words:
+            key_words.remove('')
+
+        # 往笔记中分开存储单词和句子
+        note_dict[item.id] = {'key_words': key_words, 'key_expressions': key_expressions}
+
+    # print(note_dict)
+
+    ######################################
 
 
     # 实例化
@@ -519,7 +582,7 @@ def submit(request):
 
     # 准备回到笔记录入的url
     source_id = reference_obj.source_id
-    print(source_id)
+    # print(source_id)
     global web_url
     input_url = web_url+"english/input/"+str(source_id)+"/"
 
@@ -534,29 +597,50 @@ def submit(request):
 
 
     # 赋值
-    english.english_text = english_text
+    key_words = []
+    key_expressions = []
+
+    for key, value in note_dict.items():
+        key_words.extend(value['key_words'])
+        key_expressions.extend(value['key_expressions'])
+
+    # 去掉list中的空值
+    while '' in key_expressions:
+        key_expressions.remove('')
+    while '' in key_words:
+        key_words.remove('')
+
+    key_words = ",".join(key_words)
+    key_expressions = ",".join(key_expressions)
+
+    # print(key_words)
+    # print(key_expressions)
+
     english.key_words = key_words
     english.key_expressions = key_expressions
-    english.words_to_learn = words_to_learn
+    english.english_text = english_text
+
     english.note = note
     # english.category = category_obj
     english.reference = reference_obj
 
 
-    english.created_time = created_time
-    english.modified_time = modified_time
-    #english.author = author
+   # english.created_time = created_time
+   # english.modified_time = modified_time
+   # english.author = author
 
     # 写入数据库
     english.save()
 
-    '''   
+    '''
     # 把English和tag关系写入数据库
     # 只有一个Tag的时候
     tag_obj = Tag.objects.get(id=tag)
     english.tag.add(tag_obj)
     '''
     all_tag = request.POST.getlist('tag_list')
+
+
     if all_tag:
         for index in range(len(all_tag)):
             tag_obj = Tag.objects.get(id=all_tag[index])
@@ -565,7 +649,7 @@ def submit(request):
         tag_obj = Tag.objects.get(id=1) # id=1是“Not assigned”
         english.tag.add(tag_obj)
 
-    '''   
+    '''
     # 创建音频文件，并把名字记入数据库
     '''
     english = English.objects.all().last()
@@ -580,6 +664,33 @@ def submit(request):
     english.save()
 
 
+    '''
+     # 从English中读出刚刚写入的笔记，提取keywords，key_expressions录入Element
+     '''
+
+    for key, value in note_dict.items():
+
+        tag_obj = Tag.objects.get(id=key)
+
+
+        key_word_list = value['key_words']
+        key_expression_list = value['key_expressions']
+
+        for item in key_word_list:
+            element = Element()
+            element.english_id = english.id
+            element.type = 'key_words'
+            element.text = item
+            element.save()
+            element.tag.add(tag_obj)
+
+        for item in key_expression_list:
+            element = Element()
+            element.english_id = english.id
+            element.type = 'key_expressions'
+            element.text = item
+            element.save()
+            element.tag.add(tag_obj)
 
     submission_result = "Succeed!"
 
@@ -597,28 +708,50 @@ def submit_reference(request):
 
     all_data = request.body
     source_id = request.POST.get('source_id')
+
+    # 邮件一类的资料集合
+    reference_title = request.POST.get('reference_title')
+    reference_note = request.POST.get('reference_note')
+
+    # 书本
     start_page = request.POST.get('start_page')
-    start_page = int(start_page)
     end_page = request.POST.get('end_page')
-    end_page = int(end_page)
+    print(start_page)
 
-    while start_page <= end_page:
-        page = 'Page '+str(start_page)
-        start_page = start_page + 1
+    if type(reference_title)==type('string'):
 
-        # 实例化
         reference = Reference()
 
-        # 获取页码
-        reference.english_text_location = page
+        reference.english_text_location = reference_title
+        reference.note = reference_note
         reference.source_id = source_id
-
-        #print(page)
 
         # 写入数据库
         reference.save()
 
-        print(reference.save())
+
+    if type(start_page)==type('string') and type(end_page)==type('string'):
+
+        start_page = int(start_page)
+        end_page = int(end_page)
+
+        while start_page <= end_page:
+            page = 'Page '+str(start_page)
+            start_page = start_page + 1
+
+            # 实例化
+            reference = Reference()
+
+            # 获取页码
+            reference.english_text_location = page
+            reference.source_id = source_id
+
+            #print(page)
+
+            # 写入数据库
+            reference.save()
+
+            print(reference.save())
 
     # 回到原页面
     input_url = web_url + "english/reference_list/" + str(source_id) + "/"
@@ -628,4 +761,343 @@ def submit_reference(request):
                'time_dalay': time_dalay}
     return render(request, 'submit.html', context)
 
+
+def element_review(request, id):
+    # 调用
+    data = Tag().tag_list(id)
+
+    # 返回值
+    all_tag_list = data['all_tag_list']
+    tag_dict = data['tag_dict']
+
+    context = {'all_tag_list': all_tag_list, 'tag_dict': tag_dict}
+    return render(request, 'tag_list_for_element.html', context)
+
+
+'''
+# 英语笔记列表by Tag
+# Post 方法
+'''
+def list_for_element(request):
+
+    # 获取 POST 参数
+    all_tag = request.POST.getlist('tag_list')
+    intersect_or_not = request.POST.get('intersect')
+
+    # 实例化一个Element
+    element = Element()
+
+    # 读取数据库-Table Element
+    data_element = element.tag_to_element(all_tag, intersect_or_not)
+
+    # 读取数据库-Table English
+    element_id_list = data_element['element_id_list']
+    data_english = element.element_to_english(element_id_list)
+
+
+
+
+    # 需要传递给模板的对象
+    context = {
+        'all_element_text': data_element['all_element_text'],
+        'intersect_or_not': data_element['intersect_or_not'],
+        'tag_set': data_element['tag_set'],
+        'english_styled':data_english['english_styled'],
+
+
+    }
+
+    return render(request, 'list_for_element.html', context)
+
+
+
+'''
+# 英语笔记列表by Tag
+# Post 方法
+'''
+def clean(request):
+    english = English.objects.filter(~Q(id=0))
+
+    for item in english:
+        data = item.key_words + ',' + item.key_expressions
+        data_list = data.split(',')
+        while '' in data_list:
+            data_list.remove('')
+
+        for item02 in data_list:
+            element = Element()
+            element.english_id = item.id
+
+            element.text = item02
+
+
+            if ' ' in item02:
+                element.type = 'key_expressions'
+            else:
+                element.type = 'key_words'
+
+            element.save()
+
+    return render(request, 'index.html')
+
+
+'''
+# 英语笔记列表by Tag
+# Post 方法
+'''
+def update(request, english_id):
+
+    ####################################
+    #############调取笔记#################
+    ####################################
+
+    # 获取对应的English实例 by id
+    english = get_object_or_404(English, id=english_id)
+
+    # 把笔记中的key_words 和 key_expressions高亮显示出来 via English的功能：text_highlight
+    english_dict = {};
+    single_english_note = english.text_highlight(english)
+    english_dict.update(single_english_note)
+
+    # 获取对应的Reference实例
+    reference_current = english.reference
+
+    # 获取对应的source实例
+    source = reference_current.source
+
+    # 正向查询:获取对应的Tag实例;
+    tag = english.tag.all()
+
+    # 正向查询:获取Element对应的Tag实例;
+    element = Element()
+    element2 = Element.objects.filter(english_id=english_id)
+    data = element.element_to_tag(element2)
+    statistics_tag = data['statistics_tag']
+
+
+    ####################################
+    #############更新笔记#################
+    ####################################
+
+
+    # 在Referecen表中查询source_id=source.id的所有记录（即，这本书的所有页码）
+    reference = Reference.objects.filter(source_id=source.id)
+
+    # 找出当前笔记的页码前后5页的范围 # 有问题：当不是连续输入的referncence
+    reference_range = reference.order_by('id').filter(id__gte=(reference_current.id-5))[:10]
+    #print(reference_range)
+
+
+
+    #####################################################
+    ############# listing Tags #######################
+    # ~Q(Tag_id=0)： 所有不等于0的items
+    all_tag_list = Tag.objects.filter(~Q(id=0))
+
+    # 初始化一个字典
+    tag_dict = {}
+    # 将数据表转化成字典。注意，item.root重复的键只会保留一个。所以，要对字典的键的值补救。
+    for item in all_tag_list:
+        # list([item.sub01]):将item.sub01转化为完整不分割的列表
+        tag_dict.update({item.root:list([item.sub01])})
+
+
+    for every_key in tag_dict:
+        for item in all_tag_list:
+            if every_key == item.root:
+                tag_dict[every_key].append(item.sub01)
+        # 字典的值去重
+        tag_dict[every_key] = list(set(tag_dict[every_key]))
+
+
+
+
+    # 需要传递给模板的对象
+    context = {
+        'english': english,
+        'english_dict': english_dict,
+        'reference_current':reference_current,
+
+        'reference': reference,
+        'tag': tag,
+        'source': source,
+        'element': element,
+        'statistics_tag':statistics_tag,
+
+        'tag_dict': tag_dict,
+        'all_tag_list': all_tag_list,
+        'reference_range': reference_range,
+
+        'element2':element2,
+
+    }
+
+    # 载入模板，并返回context对象
+    return render(request, 'update.html', context)
+
+
+'''
+# 录入Reference
+'''
+def submit_update(request, english_id):
+    global audio_src
+    # 获取 POST 参数
+    all_data = request.body
+    english_text = request.POST.get('english_text')
+
+    note = request.POST.get('note')
+    # category = request.POST.get('category')
+    reference = request.POST.get('reference')
+
+    modified_time = datetime.datetime.now()
+    author = 10
+
+    ##############读取各个Tag下的笔记数据，并整理成字典########################
+    # 调用Tag数据，用于比对input.html中的name和tag.id
+    all_tag = Tag().tag_list(0)
+    all_tag_list = all_tag['all_tag_list']
+    note_dict = {}
+
+    # 将笔记按照tag.id整理成字典
+    for item in all_tag_list:
+
+        key_words = []
+        key_expressions = []
+
+        data = request.POST.get(str(item.id))
+        note_list = data.split(',')
+
+        # 去掉列表note_list中每一个元素的首尾空格
+        for i, val in enumerate(note_list):
+            note_list[i] = val.strip(' ')
+
+        # 将句子和单词分开整理
+        for note_item in note_list:
+            if ' ' in note_item:
+                key_expressions.append(note_item)
+            else:
+                key_words.append(note_item)
+
+        # 去掉list中的空值
+        while '' in key_expressions:
+            key_expressions.remove('')
+        while '' in key_words:
+            key_words.remove('')
+
+        # 往笔记中分开存储单词和句子
+        note_dict[item.id] = {'key_words': key_words, 'key_expressions': key_expressions}
+
+    # print(note_dict)
+
+    ######################################
+
+    # 实例化
+    # 获取对应的English实例 by id
+    english = get_object_or_404(English, id=english_id)
+
+    reference_obj = Reference.objects.get(id=reference)
+    # category_obj = Category.objects.get(id=category)
+
+    # 准备回到笔记录入的url
+    source_id = reference_obj.source_id
+    # print(source_id)
+    global web_url
+    input_url = web_url + "english/update/" + str(english_id) + "/"
+
+    # 赋值
+    key_words = []
+    key_expressions = []
+
+    for key, value in note_dict.items():
+        key_words.extend(value['key_words'])
+        key_expressions.extend(value['key_expressions'])
+
+    # 去掉list中的空值
+    while '' in key_expressions:
+        key_expressions.remove('')
+    while '' in key_words:
+        key_words.remove('')
+
+    key_words = ",".join(key_words)
+    key_expressions = ",".join(key_expressions)
+
+    if key_words:
+        english.key_words = key_words
+
+    if key_expressions:
+        english.key_expressions = key_expressions
+
+    english.english_text = english_text
+    english.note = note
+    english.reference = reference_obj
+    english.modified_time = modified_time
+
+
+    # 写入数据库
+    english.save()
+
+    '''
+    # 把English和tag关系写入数据库
+    # 只有一个Tag的时候
+    tag_obj = Tag.objects.get(id=tag)
+    english.tag.add(tag_obj)
+    '''
+    all_tag = request.POST.getlist('tag_list')
+    english.tag.clear()
+
+    if all_tag:
+        for index in range(len(all_tag)):
+            tag_obj = Tag.objects.get(id=all_tag[index])
+            english.tag.add(tag_obj)
+    else:
+        tag_obj = Tag.objects.get(id=1)  # id=1是“Not assigned”
+        english.tag.add(tag_obj)
+
+    '''
+    # 更新音频文件，并把名字记入数据库
+    '''
+    # 更新音频
+    text = english_text
+    audio_name = str(english.id) + '.mp3'
+    audio_file_location = audio_src + audio_name
+    tts = gTTS(text)
+    tts.save(audio_file_location)
+    # 并把名字记入数据库
+    english.audio_name = audio_name
+    english.save()
+
+    '''
+     # 从English中读出刚刚写入的笔记，提取keywords，key_expressions录入Element
+     '''
+
+    for key, value in note_dict.items():
+
+        tag_obj = Tag.objects.get(id=key)
+
+        key_word_list = value['key_words']
+        key_expression_list = value['key_expressions']
+
+        for item in key_word_list:
+            element = Element()
+            element.english_id = english.id
+            element.type = 'key_words'
+            element.text = item
+            element.save()
+            element.tag.add(tag_obj)
+
+        for item in key_expression_list:
+            element = Element()
+            element.english_id = english.id
+            element.type = 'key_expressions'
+            element.text = item
+            element.save()
+            element.tag.add(tag_obj)
+
+    submission_result = "Succeed!"
+
+    if submission_result == "Succeed!":
+        time_dalay = 500
+        context = {'submission_result': submission_result, 'all_data': all_data, 'input_url': input_url,
+                   'time_dalay': time_dalay}
+        return render(request, 'submit.html', context)
 

@@ -14,6 +14,7 @@ class Category(models.Model):
         return self.name
 
 
+
 '''
 # 英语摘录的标签
 # root sub01-02: 标签的三级所属类别
@@ -568,7 +569,7 @@ class English(models.Model):
 
 
     '''
-    # 反向查询 Tag to English 
+    # 反向查询 Tag to English
     '''
     def tag_to_english(self, tag_id_list, intersect_or_not):
 
@@ -633,3 +634,165 @@ class English(models.Model):
 
 
 
+'''
+# 英语摘录的单词和表达
+'''
+class Element(models.Model):
+    text = models.TextField(null=True)
+    type = models.CharField(max_length=100) ## key_words, Key_expressions
+    english = models.ForeignKey(English, on_delete=models.CASCADE, null=True)
+    tag = models.ManyToManyField(to=Tag, related_name="for_element", null=True)
+    note = models.TextField(null=True)
+
+    '''
+     # 反向查询 Tag to Element
+     '''
+
+    def tag_to_element(self, tag_id_list, intersect_or_not):
+
+        if isinstance(tag_id_list, list):
+            tag_id_list = tag_id_list
+        # 一条记录的查询时，tag_id_list为整数，所以要转化为list
+        else:
+            # [str(tag_id_list)]一定要加个方括号，这样两位数就不会被list成两个元素了，比如10就不会变成[1,0]
+            tag_id_list = list([str(tag_id_list)])
+
+        # 实例化Tag
+        tag_set = Tag.objects.filter(id__in=tag_id_list)
+
+        arr_query = tag_id_list
+
+        for index in range(len(tag_id_list)):
+            tag_obj = Tag.objects.get(id=tag_id_list[index])
+
+            #用到 tag = models.ManyToManyField(to=Tag, related_name="for_element", null=True)
+            all_element_text = tag_obj.for_element.all()
+
+            arr_query[index] = all_element_text
+
+        ''''''
+        # Tag的交集/并集运算
+        if intersect_or_not == 'no':
+            for index in range(len(arr_query)):
+                all_element_text = all_element_text | arr_query[index]
+
+        if intersect_or_not == 'yes':
+            for index in range(len(arr_query)):
+                all_element_text = all_element_text & arr_query[index]
+
+        # 去除重复items
+        all_element_text = all_element_text.order_by('id').distinct()
+
+        element_id_list = []
+        for item in all_element_text:
+            element_id_list.append(str(item.id))
+
+
+
+        # 需要传递给模板的对象
+        data = {
+            'all_element_text': all_element_text,
+            'element_id_list': element_id_list,
+            'intersect_or_not': intersect_or_not,
+            'tag_set': tag_set,
+        }
+
+        return data
+
+
+    '''
+    # 反向查询 Element to English
+    '''
+    def element_to_english(self, element_id_list):
+
+        if isinstance(element_id_list, list):
+            element_id_list = element_id_list
+        # 一条记录的查询时，element_id_list为整数，所以要转化为list
+        else:
+            # [str(element_id_list)]一定要加个方括号，这样两位数就不会被list成两个元素了，比如10就不会变成[1,0]
+            element_id_list = list([str(element_id_list)])
+
+        element = Element.objects.filter(id__in=element_id_list)
+        english_id = element.values('english_id')
+        #print(english_id)
+        english = English.objects.filter(id__in=english_id)
+        #print(english)
+
+        # 调用
+        # 把笔记中的key_words 和 key_expressions高亮显示出来 via English的功能：text_highlight
+        english_styled = {};
+
+        for item in english:
+            single_english_note = item.text_highlight(item)
+            #print(single_english_note)
+            english_styled.update(single_english_note)
+
+        print(english_styled)
+        data = {
+            'element': element,
+            'english': english,
+            'english_styled': english_styled,
+
+        }
+        return data
+
+
+    '''
+    # 正向查询 English to Element
+    '''
+    def english_to_element(self, english):
+
+        english_id = english.id
+        element = Element.objects.filter(english_id=english_id).order_by('id')
+        return element
+
+    def element_to_tag(self, element):
+
+        # 初始化 字典的结构{int:{int:int}}
+        dict_element_to_tag = {}
+        # 初始化 字典的结构{int:[int, []]}
+        statistics_tag = {}
+
+        for element_item in element:
+            # 收集element-tags对应关系
+            tag = element_item.tag.all()
+            tag_list = []
+            for tag_item in tag:
+                tag_list.append(tag_item.name)
+
+            while '' in tag_list:
+                tag_list.remove('')
+
+            dict_element_to_tag.update({element_item.id: [element_item.text,element_item.type,tag_list]})
+            print(tag)
+
+            # 统计tags的情况
+            for tag_item in tag:
+                print(tag_item)
+                if statistics_tag.__contains__(tag_item.name):
+                    # 计数
+                    statistics_tag[tag_item.name][0] = statistics_tag[tag_item.name][0] + 1
+                    # 记录对应的element id
+                    statistics_tag[tag_item.name][1].append(str(element_item.id))
+                    # 记录对应的element text
+                    statistics_tag[tag_item.name][2] = statistics_tag[tag_item.name][2] + element_item.text + ', '
+
+                else:
+                    count = 1
+                    element_id_list = list([str(element_item.id)])
+                    element_text_str = element_item.text + ', '
+
+                    statistics_tag.update({tag_item.name: [count, element_id_list, element_text_str]})
+
+            print(statistics_tag)
+
+        data = {
+            'element': element,
+            'dict_element_to_tag': dict_element_to_tag,
+            'statistics_tag': statistics_tag,
+        }
+
+        return data
+
+    def __str__(self):
+        return self.text
