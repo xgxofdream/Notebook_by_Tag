@@ -764,11 +764,11 @@ class Element(models.Model):
                 tag_list.remove('')
 
             dict_element_to_tag.update({element_item.id: [element_item.text,element_item.type,tag_list]})
-            print(tag)
+            #print(tag)
 
             # 统计tags的情况
             for tag_item in tag:
-                print(tag_item)
+                #print(tag_item)
                 if statistics_tag.__contains__(tag_item.name):
                     # 计数
                     statistics_tag[tag_item.name][0] = statistics_tag[tag_item.name][0] + 1

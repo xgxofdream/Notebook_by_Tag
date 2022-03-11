@@ -1,6 +1,24 @@
 {% include "head.html" %}
 {% include "menu.html" %}
 
+<script>
+    window.onload = function () {
+
+        {% for key, value in statistics_tag.items %}
+            document.getElementById("{{ key }}").checked = "checked";
+        {% endfor %}
+
+        {% for key, value in statistics_tag.items %}
+            {% for item in all_tag_list %}
+                {% if item.name == key %}
+                    document.getElementById("{{ item.sub01 }}").open = true;
+                {% endif %}
+            {% endfor %}
+        {% endfor %}
+    }
+
+</script>
+
 <p style="font-weight: bold; text-align: center">**********************笔记的原始信息**********************</p>
 
 <table>
@@ -8,9 +26,12 @@
     <tr>
         <td style="font-weight: bold">Source</td>
         <td>
-            <p style="font-weight: bold">
-                |&nbsp&nbsp{{ source.type }}&nbsp&nbsp|&nbsp&nbsp{{ source.name }}&nbsp&nbsp|&nbsp&nbsp{{ reference_current.english_text_location }}&nbsp&nbsp|&nbsp&nbspID:&nbsp<a
-                    href="{{ web_url }}english/detail/{{ english.id }}/">{{ english.id }}</a>&nbsp&nbsp|</p>
+            <p style="">
+                |&nbsp&nbsp<a href="{{ web_url }}english/source_list/{{ source.type }}/">{{ source.type }}</a>&nbsp&nbsp
+                |&nbsp&nbsp<a href="{{ web_url }}english/list_by_source/{{ source.id }}/">{{ source.name }}</a>&nbsp
+                ({{ reference_current.english_text_location }})&nbsp
+                |&nbsp&nbspID:&nbsp<a href="{{ web_url }}english/detail/{{ english.id }}/">{{ english.id }}</a>&nbsp&nbsp|
+            </p>
         </td>
     </tr>
 
@@ -27,7 +48,7 @@
         </td>
     </tr>
     <tr>
-        <td style="font-weight: bold">Lable:Notes</td>
+        <td style="font-weight: bold">Analysis</td>
         <td>
             {% for key, value in statistics_tag.items %}
 
@@ -43,7 +64,7 @@
     <tr>
         <td style="font-weight: bold">Element</td>
         <td>
-            {{ element2 }}
+            {{ element2.text }}
 
         </td>
     </tr>
@@ -58,14 +79,12 @@
 
 
 </table>
-<br><br><br>
+<br>
 
 <p style="font-weight: bold; text-align: center">**********************更新这条英语笔记**********************</p>
 
 <form action="{{ web_url }}english/submit_update/{{ english.id }}/" method="post"> {% csrf_token %}
 
-
-    <br><br>
 
 
     <table>
@@ -111,7 +130,7 @@
                     <span style="font-weight: bold; font-size: 16pt">{{ key }}:&nbsp</span>
                     <br><br>
                     {% for list_item in value %}
-                        <details style="display: inline-block;vertical-align: text-top;">
+                        <details id="{{ list_item }}" style="display: inline-block;vertical-align: text-top;">
 
                             <summary style="font-style: italic; font-weight: bold">{{ list_item }}</summary>
 
@@ -121,13 +140,14 @@
 
                                     {% if item.sub01 == list_item %}
 
-                                        <input type="checkbox" name="tag_list" id="{{ item.id}}" value="{{item.id}}"/>-
+                                        <input type="checkbox" name="tag_list" id="{{ item.name }}"
+                                               value="{{ item.id }}"/>-
                                         {{ item.name }}&nbsp&nbsp&nbsp
 
                                         {% if item.sub01 != '学术类' and item.sub01 != '专业类' and item.sub01 != '语法类' %}
-                                            <input style="width:1600px; height:30px; font-size: 20pt;text-align: left" type="text"
-                                                   name="{{ item.id }}" value="{% for key, value in statistics_tag.items %}{% if key == item.name %}{{ value.2 }}{% endif %}{% endfor %}
-                                             "/>
+                                            <input style="width:1600px; height:30px; font-size: 20pt;text-align: left"
+                                                   type="text"
+                                                   name="{{ item.id }}" value="{% for key, value in statistics_tag.items %}{% if key == item.name %}{{ value.2 }}{% endif %}{% endfor %}"/>
 
 
                                         {% else %}

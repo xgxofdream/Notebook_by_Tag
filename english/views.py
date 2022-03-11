@@ -811,34 +811,7 @@ def list_for_element(request):
 
 
 
-'''
-# 英语笔记列表by Tag
-# Post 方法
-'''
-def clean(request):
-    english = English.objects.filter(~Q(id=0))
 
-    for item in english:
-        data = item.key_words + ',' + item.key_expressions
-        data_list = data.split(',')
-        while '' in data_list:
-            data_list.remove('')
-
-        for item02 in data_list:
-            element = Element()
-            element.english_id = item.id
-
-            element.text = item02
-
-
-            if ' ' in item02:
-                element.type = 'key_expressions'
-            else:
-                element.type = 'key_words'
-
-            element.save()
-
-    return render(request, 'index.html')
 
 
 '''
@@ -847,9 +820,9 @@ def clean(request):
 '''
 def update(request, english_id):
 
-    ####################################
-    #############调取笔记#################
-    ####################################
+    '''
+    调取笔记
+    '''
 
     # 获取对应的English实例 by id
     english = get_object_or_404(English, id=english_id)
@@ -875,18 +848,16 @@ def update(request, english_id):
     statistics_tag = data['statistics_tag']
 
 
-    ####################################
-    #############更新笔记#################
-    ####################################
+    '''
+    更新笔记
+    '''
 
 
     # 在Referecen表中查询source_id=source.id的所有记录（即，这本书的所有页码）
     reference = Reference.objects.filter(source_id=source.id)
 
-    # 找出当前笔记的页码前后5页的范围 # 有问题：当不是连续输入的referncence
+    # 找出当前笔记的页码前后5页的范围
     reference_range = reference.order_by('id').filter(id__gte=(reference_current.id-5))[:10]
-    #print(reference_range)
-
 
 
     #####################################################
@@ -940,19 +911,23 @@ def update(request, english_id):
 # 录入Reference
 '''
 def submit_update(request, english_id):
+
     global audio_src
+
+    # 准备url：回到update页面
+    global web_url
+    input_url = web_url + "english/update/" + str(english_id) + "/"
+
     # 获取 POST 参数
     all_data = request.body
     english_text = request.POST.get('english_text')
-
     note = request.POST.get('note')
-    # category = request.POST.get('category')
     reference = request.POST.get('reference')
 
-    modified_time = datetime.datetime.now()
-    author = 10
+    '''
+    获取前台传来的每个Tag类别下的数据
+    '''
 
-    ##############读取各个Tag下的笔记数据，并整理成字典########################
     # 调用Tag数据，用于比对input.html中的name和tag.id
     all_tag = Tag().tag_list(0)
     all_tag_list = all_tag['all_tag_list']
@@ -964,6 +939,7 @@ def submit_update(request, english_id):
         key_words = []
         key_expressions = []
 
+        # 获取 POST 参数中各个Tag名下的值。item.id是Tag.id,也作为前台Tag的POST参数名
         data = request.POST.get(str(item.id))
         note_list = data.split(',')
 
@@ -984,26 +960,13 @@ def submit_update(request, english_id):
         while '' in key_words:
             key_words.remove('')
 
-        # 往笔记中分开存储单词和句子
+        # 往Tag字典中存储单词和句子。item.id就是键值，也即Tag.id
         note_dict[item.id] = {'key_words': key_words, 'key_expressions': key_expressions}
 
-    # print(note_dict)
 
-    ######################################
-
-    # 实例化
-    # 获取对应的English实例 by id
-    english = get_object_or_404(English, id=english_id)
-
-    reference_obj = Reference.objects.get(id=reference)
-    # category_obj = Category.objects.get(id=category)
-
-    # 准备回到笔记录入的url
-    source_id = reference_obj.source_id
-    # print(source_id)
-    global web_url
-    input_url = web_url + "english/update/" + str(english_id) + "/"
-
+    '''
+    将每个Tag类别下的数据整理成字符串，预备存进数据库
+    '''
     # 赋值
     key_words = []
     key_expressions = []
@@ -1021,34 +984,58 @@ def submit_update(request, english_id):
     key_words = ",".join(key_words)
     key_expressions = ",".join(key_expressions)
 
+
+    '''
+    更新数据库
+    '''
+    # 实例化English
+    english = get_object_or_404(English, id=english_id)
+
+    # 将reference存进数据库
+    # 获取reference
+    reference_obj = Reference.objects.get(id=reference)
+    english.reference = reference_obj
+
+
+    # 将key_words存入数据库
     if key_words:
         english.key_words = key_words
 
+    # 将key_expressions存入数据库
     if key_expressions:
         english.key_expressions = key_expressions
 
-    english.english_text = english_text
+    # 将english_text存入数据库
+    if english_text:
+        english.english_text = english_text
+
+    # 将note存入数据库
     english.note = note
-    english.reference = reference_obj
+
+    # 将modified_time存入数据库
+    modified_time = datetime.datetime.now()
     english.modified_time = modified_time
 
-
-    # 写入数据库
+    ################
+    ### 更新数据库 ###
+    ################
     english.save()
 
     '''
-    # 把English和tag关系写入数据库
-    # 只有一个Tag的时候
-    tag_obj = Tag.objects.get(id=tag)
-    english.tag.add(tag_obj)
+    把English和tag关系写入数据库
+    只有一个Tag的时候：tag_obj = Tag.objects.get(id=tag)，english.tag.add(tag_obj)
     '''
-    all_tag = request.POST.getlist('tag_list')
+    # 清空之前的tag_english关系
     english.tag.clear()
+
+    # 获取新的tag_english关系
+    all_tag = request.POST.getlist('tag_list')
 
     if all_tag:
         for index in range(len(all_tag)):
             tag_obj = Tag.objects.get(id=all_tag[index])
             english.tag.add(tag_obj)
+    # 如果没有任何指定，则默认为Not assigned
     else:
         tag_obj = Tag.objects.get(id=1)  # id=1是“Not assigned”
         english.tag.add(tag_obj)
@@ -1056,15 +1043,22 @@ def submit_update(request, english_id):
     '''
     # 更新音频文件，并把名字记入数据库
     '''
-    # 更新音频
+
+    # 获取文本
     text = english_text
+
+    # 创建文件名和路径
     audio_name = str(english.id) + '.mp3'
     audio_file_location = audio_src + audio_name
-    tts = gTTS(text)
-    tts.save(audio_file_location)
+
     # 并把名字记入数据库
     english.audio_name = audio_name
     english.save()
+
+    # 生成语音文件并存储
+    tts = gTTS(text)
+    tts.save(audio_file_location)
+
 
     '''
      # 从English中读出刚刚写入的笔记，提取keywords，key_expressions录入Element
@@ -1093,6 +1087,10 @@ def submit_update(request, english_id):
             element.save()
             element.tag.add(tag_obj)
 
+
+    '''
+    返回更新数据库的结果
+    '''
     submission_result = "Succeed!"
 
     if submission_result == "Succeed!":

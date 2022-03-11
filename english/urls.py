@@ -81,7 +81,5 @@ urlpatterns = [
     path('submit_update/<int:english_id>/', views.submit_update, name='submit_update'),
 
 
-    # extra
-    path('clean/', views.clean, name='clean'),
 
 ]
