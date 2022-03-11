@@ -1062,7 +1062,18 @@ def submit_update(request, english_id):
 
     '''
      # 从English中读出刚刚写入的笔记，提取keywords，key_expressions录入Element
-     '''
+    '''
+
+    # 清空之前的english_element关系
+    element = Element()
+    element_set = element.english_to_element(english)
+
+    for item in element_set:
+        item.tag.clear()
+        item.delete()
+
+    # 清空之前的tag_element关系
+
 
     for key, value in note_dict.items():
 

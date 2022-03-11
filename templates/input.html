@@ -77,11 +77,14 @@
 
                                     {% if item.sub01 == list_item %}
 
-                                        <input type="checkbox" name="tag_list" value="{{ item.id }}"/>-
+                                        <input type="checkbox" name="tag_list" value="{{ item.id }}" id="{{ item.name }}"/>-
                                         {{ item.name }}&nbsp&nbsp&nbsp
 
                                         {% if item.sub01 != '学术类' and item.sub01 != '专业类' and item.sub01 != '语法类' %}
-                                            <input type="text" name="{{ item.id }}" value=""
+                                            <input type="text"
+                                                   name="{{ item.id }}"
+                                                   value=""
+                                                   onchange="{this.value == '' ? document.getElementById('{{ item.name }}').checked='': document.getElementById('{{ item.name }}').checked='checked'}"
                                                    style="width:1600px; height:30px; font-size: 20pt"/>
                                         {% else %}
                                             <input type="hidden" name="{{ item.id }}" value=""/>

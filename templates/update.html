@@ -55,7 +55,7 @@
         </td>
     </tr>
     <tr>
-        <td style="font-weight: bold">Analysis</td>
+        <td style="font-weight: bold; vertical-align: middle">Analysis</td>
         <td>
             {% for key, value in statistics_tag.items %}
 
@@ -70,8 +70,12 @@
 
     <tr>
         <td style="font-weight: bold">Element</td>
-        <td>
-            {{ element2.text }}
+        <td>|&nbsp
+            {% for item in element2 %}
+
+            {{ item.text }}&nbsp|&nbsp
+
+            {% endfor %}
 
         </td>
     </tr>
@@ -153,7 +157,7 @@
                                         {% if item.sub01 != '学术类' and item.sub01 != '专业类' and item.sub01 != '语法类' %}
                                             <input style="width:1600px; height:30px; font-size: 20pt;text-align: left"
                                                    type="text"
-                                                   name="{{ item.name }}"
+                                                   name="{{ item.id }}"
                                                    id="{{ item.id }}"
                                                    onchange="{this.value == '' ? document.getElementById('{{ item.name }}').checked='': document.getElementById('{{ item.name }}').checked='checked'}"
                                                    value="{% for key, value in statistics_tag.items %}{% if key == item.name %}{{ value.2 }}{% endif %}{% endfor %}"/>
@@ -161,7 +165,7 @@
 
 
                                         {% else %}
-                                            <input type="hidden" name="{{ item.name }}" value=""/>
+                                            <input type="hidden" name="{{ item.id }}" value=""/>
 
                                         {% endif %} <br>
 
