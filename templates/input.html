@@ -1,20 +1,49 @@
 {% include "head.html" %}
 {% include "menu.html" %}
 
-<p style="font-weight: bold; text-align: center">**********************上一次录入笔记的信息**********************</p>
+
+<br>
+<p style="text-align: center;">**********************<span
+        style="font-weight: bold; text-align: center; font-size: 20pt">Lastest record</span>**********************</p>
+<br>
+
 <table>
     <tr>
-        <td style="text-align: center">
-            <p style="font-weight: bold">
-                |&nbsp&nbsp{{ source.type }}&nbsp&nbsp|&nbsp&nbsp{{ source.name }}&nbsp&nbsp|&nbsp&nbsp{{ last_reference.english_text_location }}&nbsp&nbsp|</p>
-            <textarea style="font-size:16pt;" id=" " name="" rows="6" cols="100">{{ last_english_text }}</textarea>
+        <td style="font-weight: bold">
+            Source
+        </td>
+        <td>
+            <p>
+                |&nbsp&nbsp
+                <a href="{{ web_url }}english/source_list/{{ source.type }}/">{{ source.type }}</a>
+                &nbsp&nbsp|&nbsp&nbsp
+                <a href="{{ web_url }}english/list_by_source/{{ source.id }}/">{{ source.name }}</a>
+                &nbsp({{ last_reference.english_text_location }})&nbsp&nbsp|&nbsp&nbspID:&nbsp
+                <a href="{{ web_url }}english/detail/{{ last_english_text.id }}/">{{ last_english_text.id }}</a>
+                &nbsp&nbsp|
+            </p>
+
+        </td>
+    </tr>
+    <tr>
+        <td style="font-weight: bold">
+            Text
+        </td>
+        <td style="font-size: 30px;">
+            {% for key, value in english_styled.items %}
+                {{ value.english_text|safe }}
+            {% endfor %}
 
         </td>
     </tr>
 </table>
 <br><br><br>
 
-<p style="font-weight: bold; text-align: center">**********************录入这次的英语笔记**********************</p>
+<br>
+<p style="text-align: center;">**********************<span
+        style="font-weight: bold; text-align: center; font-size: 20pt">Input record</span>**********************</p>
+<br>
+
 
 <p style="font-weight: bold; text-align: center">
     |&nbsp&nbsp{{ source.type }}&nbsp&nbsp|&nbsp&nbsp{{ source.name }}&nbsp&nbsp|</p>
@@ -28,7 +57,7 @@
 
         <tr>
             <td style="text-align: center">
-                <p style="font-weight: bold">>>位置<<</p>
+                <p style="font-weight: bold">>>Reference<<</p>
 
 
                 {% for item in reference_range %}
@@ -47,29 +76,27 @@
 
         <tr>
             <td style="text-align: center">
-                <p style="font-weight: bold">>>正文<<</p>
+                <p style="font-weight: bold">>>Text<<</p>
                 <textarea style="font-size: 20pt" id=" " name="english_text" rows="6" cols="100"></textarea>
                 <br><br>
             </td>
         </tr>
         <tr>
             <td style="text-align: center">
-                <p style="font-weight: bold">>>Note:<<</p>
+                <p style="font-weight: bold">>>Note<<</p>
                 <textarea style="font-size: 20pt" id=" " name="note" rows="4" cols="100"></textarea>
                 <br><br>
             </td>
         </tr>
+        {% for key, value in tag_dict.items %}
+            <tr>
+                <td style="width:100%">
+                    <p style="font-weight: bold; font-size: 16pt;">{{ key }}</p>
 
-        <tr>
-            <td style="width:100%">
-                {% for key, value in tag_dict.items %}
-
-                    <span style="font-weight: bold; font-size: 16pt">{{ key }}:&nbsp</span>
-                    <br><br>
                     {% for list_item in value %}
                         <details style="display: inline-block;vertical-align: text-top;">
 
-                            <summary style="font-style: italic; font-weight: bold">{{ list_item }}</summary>
+                            <summary style="font-style: italic;">{{ list_item }}</summary>
 
                             {% for item in all_tag_list %}
 
@@ -77,7 +104,8 @@
 
                                     {% if item.sub01 == list_item %}
 
-                                        <input type="checkbox" name="tag_list" value="{{ item.id }}" id="{{ item.name }}"/>-
+                                        <input type="checkbox" name="tag_list" value="{{ item.id }}"
+                                               id="{{ item.name }}"/>-
                                         {{ item.name }}&nbsp&nbsp&nbsp
 
                                         {% if item.sub01 != '学术类' and item.sub01 != '专业类' and item.sub01 != '语法类' %}
@@ -99,15 +127,11 @@
                         </details>
                         &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp
                     {% endfor %}
-                    <br><br>
-                    <p style="text-align: center">
-                        ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------</p>
-                    <br><br>
 
-                {% endfor %}
-            </td>
+                </td>
 
-        </tr>
+            </tr>
+        {% endfor %}
         <tr>
             <td>
                 <p style="font-weight: bold; text-align: center">**********************<input type="submit"

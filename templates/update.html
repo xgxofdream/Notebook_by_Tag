@@ -2,7 +2,7 @@
 {% include "menu.html" %}
 
 <script>
-//复选框的自动勾选；details列表的自动展开
+    //复选框的自动勾选；details列表的自动展开
     window.onload = function () {
 
         {% for key, value in statistics_tag.items %}
@@ -21,13 +21,10 @@
 </script>
 
 
-
-
 </script>
-
-
-<p style="font-weight: bold; text-align: center">**********************笔记的原始信息**********************</p>
-
+<br>
+<p style="text-align: center;">**********************<spanstyle="font-weight: bold; text-align: center; font-size: 20pt">Original record</span>**********************</p>
+<br>
 <table>
 
     <tr>
@@ -59,9 +56,7 @@
         <td>
             {% for key, value in statistics_tag.items %}
 
-
                 {{ key }}:&nbsp&nbsp{{ value.2 }}<br>
-
 
             {% endfor %}
 
@@ -70,10 +65,10 @@
 
     <tr>
         <td style="font-weight: bold">Element</td>
-        <td>|&nbsp
+        <td>
             {% for item in element2 %}
 
-            {{ item.text }}&nbsp|&nbsp
+                &nbsp|&nbsp{{ item.text }}
 
             {% endfor %}
 
@@ -90,10 +85,11 @@
 
 
 </table>
+
+<br><br>
+<p style="text-align: center;">**********************<span
+        style="font-weight: bold; text-align: center; font-size: 20pt">To update</span>**********************</p>
 <br>
-
-<p style="font-weight: bold; text-align: center">**********************更新这条英语笔记**********************</p>
-
 <form action="{{ web_url }}english/submit_update/{{ english.id }}/" method="post"> {% csrf_token %}
 
 
@@ -101,48 +97,54 @@
 
         <tr>
             <td style="text-align: center">
-                <p style="font-weight: bold">>>位置<<</p>
+                <details style="display: inline-block;vertical-align: text-top;">
+                    <summary>
+                        <span style="font-weight: bold">>>Reference<<</span>
+                    </summary>
 
+                    {% for item in reference_range %}
 
-                {% for item in reference_range %}
+                        {% if forloop.first %}
+                            <input type="radio" name="reference" checked="checked" value="{{ item.id }}"/>
+                            -
+                            {{ item.english_text_location }}&nbsp&nbsp
+                        {% else %}<input type="radio" name="reference" value="{{ item.id }}"/>-
+                            {{ item.english_text_location }}
+                            &nbsp&nbsp
+                        {% endif %}
+                    {% endfor %}
+                </details>
+                &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp
 
-                    {% if forloop.first %}
-                        <input type="radio" name="reference" checked="checked" value="{{ item.id }}"/>
-                        -
-                        {{ item.english_text_location }}&nbsp&nbsp
-                    {% else %}<input type="radio" name="reference" value="{{ item.id }}"/>-
-                        {{ item.english_text_location }}
-                        &nbsp&nbsp
-                    {% endif %}
-                {% endfor %}
+                <details style="display: inline-block;vertical-align: text-top;">
+                    <summary>
+                        <span style="font-weight: bold">>>Text<<</span>
+                    </summary>
+                    <textarea style="font-size: 20pt" id=" " name="english_text" rows="6"
+                              cols="100">{{ english.english_text }}</textarea>
+                </details>
+                &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp
+
+                <details style="display: inline-block;vertical-align: text-top;">
+                    <summary>
+                        <span style="font-weight: bold">>>Notes<<</span>
+                    </summary>
+                    <textarea style="font-size: 20pt" id=" " name="note" rows="4"
+                              cols="100">{{ english.note }}</textarea>
+                </details>
             </td>
         </tr>
 
-        <tr>
-            <td style="text-align: center">
-                <p style="font-weight: bold">>>正文<<</p>
-                <textarea style="font-size: 20pt" id=" " name="english_text" rows="6"
-                          cols="100">{{ english.english_text }}</textarea>
-                <br><br>
-            </td>
-        </tr>
-        <tr>
-            <td style="text-align: center">
-                <p style="font-weight: bold">>>Note:<<</p>
-                <textarea style="font-size: 20pt" id=" " name="note" rows="4" cols="100">{{ english.note }}</textarea>
-                <br><br>
-            </td>
-        </tr>
-        <tr>
-            <td style="width:100%">
-                {% for key, value in tag_dict.items %}
+        {% for key, value in tag_dict.items %}
+            <tr>
+                <td style="width:100%">
 
-                    <span style="font-weight: bold; font-size: 16pt">{{ key }}:&nbsp</span>
-                    <br><br>
+                    <p style="font-weight: bold; font-size: 16pt;">{{ key }}</p>
+
                     {% for list_item in value %}
                         <details id="{{ list_item }}" style="display: inline-block;vertical-align: text-top;">
 
-                            <summary style="font-style: italic; font-weight: bold">{{ list_item }}</summary>
+                            <summary style="font-style: italic;">{{ list_item }}</summary>
 
                             {% for item in all_tag_list %}
 
@@ -160,7 +162,8 @@
                                                    name="{{ item.id }}"
                                                    id="{{ item.id }}"
                                                    onchange="{this.value == '' ? document.getElementById('{{ item.name }}').checked='': document.getElementById('{{ item.name }}').checked='checked'}"
-                                                   value="{% for key, value in statistics_tag.items %}{% if key == item.name %}{{ value.2 }}{% endif %}{% endfor %}"/>
+                                                   value="
+                                                           {% for key, value in statistics_tag.items %}{% if key == item.name %}{{ value.2 }}{% endif %}{% endfor %}"/>
 
 
 
@@ -177,15 +180,12 @@
                         </details>
                         &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp
                     {% endfor %}
-                    <br><br>
-                    <p style="text-align: center">
-                        ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------</p>
-                    <br><br>
+                </td>
 
-                {% endfor %}
-            </td>
+            </tr>
 
-        </tr>
+        {% endfor %}
+
         <tr>
             <td>
                 <p style="font-weight: bold; text-align: center">**********************<input type="submit"

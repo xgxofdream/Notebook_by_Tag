@@ -445,13 +445,13 @@ def input(request, id):
 
     # 如果Table English 有记录。
     if all_english_text:
+
         # 找出最后一条记录（即，最后一条英语笔记）
         last_english_text = all_english_text.order_by('id').last()
-        #print(last_english_text)
+        english_styled = last_english_text.text_highlight(last_english_text)
 
         last_reference = last_english_text.reference
 
-        #print(last_reference.id)
 
         '''
         列出最新笔记所在页码之后的10页，即 last_reference.id+10
@@ -510,7 +510,8 @@ def input(request, id):
         'reference_range': reference_range,
         'source': source,
         'last_reference': last_reference,
-        'last_english_text': last_english_text
+        'last_english_text': last_english_text,
+        'english_styled':english_styled,
     }
     return render(request, 'input.html', context)
 

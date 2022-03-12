@@ -1,37 +1,45 @@
 {% include "head.html" %}
 {% include "menu.html" %}
 
-
+<br>
 <form name="" action="{{ web_url }}english/list_by_tag_post/" method="post">{% csrf_token %}
-    {% for key, value in tag_dict.items %}
-        <span style="font-weight: bold; font-size: 16pt">{{ key }}:&nbsp</span>
-        <br>
-        {% for list_item in value %}
-            <details open style="display: inline-block;vertical-align: text-top;">
+    <table>
+        {% for key, value in tag_dict.items %}
 
-                <summary style="font-style: italic; font-weight: bold">{{ list_item }}</summary>
+            <tr>
+                <td style="font-weight: bold;width: 8%;vertical-align: middle">
+                    <span style="font-weight: bold; font-size: 16pt">{{ key }}</span>
+                </td>
 
-                {% for item in all_tag_list %}
+                <td>
+                    {% for list_item in value %}
+                        <details open style="display: inline-block;vertical-align: text-top;">
 
-                    {% if item.root == key %}
+                            <summary style="font-style: italic; font-weight: bold">{{ list_item }}</summary>
 
-                        {% if item.sub01 == list_item %}
+                            {% for item in all_tag_list %}
 
-                            <input type="checkbox" name="tag_list" value="{{ item.id }}"/>-
-                            {{ item.name }}&nbsp&nbsp&nbsp
+                                {% if item.root == key %}
+
+                                    {% if item.sub01 == list_item %}
+
+                                        <input type="checkbox" name="tag_list" value="{{ item.id }}"/>-
+                                        {{ item.name }}&nbsp&nbsp&nbsp
 
 
-                        {% endif %}
+                                    {% endif %}
 
-                    {% endif %}
+                                {% endif %}
 
-                {% endfor %}
-            </details>
-            &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp
+                            {% endfor %}
+                        </details>
+                        &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp
+                    {% endfor %}
+                </td>
+            </tr>
+
         {% endfor %}
-        <br><br>
-
-    {% endfor %}
+    </table>
 
 
     <p>-----------------------------------------------------------------------------</p>
