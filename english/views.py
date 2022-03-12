@@ -1,7 +1,7 @@
 # 引入redirect重定向模块
 from django.shortcuts import render, redirect, get_object_or_404
-from django.db.models import Q
-
+# from django.conf import settings
+from django.contrib.auth.decorators import login_required
 
 
 import datetime
@@ -26,6 +26,8 @@ from .models import *
 web_url = 'http://127.0.0.1:8000/'
 audio_src = './media/english/text_to_speech/'
 
+
+
 def global_params(request):
 
     global web_url
@@ -34,11 +36,10 @@ def global_params(request):
         'web_url': web_url,
     }
 
-
-
 '''
 # 首页
 '''
+
 def index(request):
     greetings = 'Hello'
     now = datetime.datetime.now()
@@ -49,7 +50,15 @@ def index(request):
 '''
 # 列出Reference
 '''
+@login_required(login_url=web_url + 'admin')
 def reference_list(request, source_id):
+
+    '''
+    # 用户验证
+    if not request.user.is_authenticated:
+        return redirect('%s?next=%s' % (settings.LOGIN_URL, request.path))
+    '''
+
     # 初始化 context, source_type
     context = {}
     display_page_relevant = ''
@@ -85,7 +94,10 @@ def reference_list(request, source_id):
 '''
 # 列出Source
 '''
+
 def source_list(request, source_type):
+
+
     # 初始化 context
     context = {}
 
@@ -103,6 +115,8 @@ def source_list(request, source_type):
     })
 
     return render(request, 'source_list.html', context)
+
+
 
 '''
 # 列出Tag
@@ -431,7 +445,13 @@ def summary(request):
 '''
 # 录入英语笔记
 '''
+@login_required(login_url=web_url + 'admin')
 def input(request, id):
+    '''
+    # 用户验证
+    if not request.user.is_authenticated:
+        return redirect('%s?next=%s' % (settings.LOGIN_URL, request.path))
+    '''
 
     ############# 上一次记录到哪里 (the last English_text_location)#######################
     # 在Referecen表中查询source_id=id的所有记录（即，这本书的所有页码）
@@ -819,7 +839,14 @@ def list_for_element(request):
 # 英语笔记列表by Tag
 # Post 方法
 '''
+@login_required(login_url=web_url + 'admin')
 def update(request, english_id):
+
+    '''
+    # 用户验证
+    if not request.user.is_authenticated:
+        return redirect('%s?next=%s' % (settings.LOGIN_URL, request.path))
+    '''
 
     '''
     调取笔记
@@ -909,7 +936,7 @@ def update(request, english_id):
 
 
 '''
-# 录入Reference
+# 提交更新的数据
 '''
 def submit_update(request, english_id):
 

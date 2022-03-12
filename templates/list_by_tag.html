@@ -58,7 +58,8 @@ Tag:&nbsp&nbsp
 
         <a href="{{ web_url }}english/detail/{{ key }}/">
             {{ value.english_text|safe }} @id= {{ key }}
-        </a>
+        </a>&nbsp&nbsp|&nbsp&nbsp
+        <a href="{{ web_url }}english/update/{{ key }}/"><span style="font-style: italic; font-weight: normal">Update</span></a>
     </p>
 {% endfor %}
 <p>*************************************************************************</p>

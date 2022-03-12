@@ -23,7 +23,7 @@
 
 </script>
 <br>
-<p style="text-align: center;">**********************<spanstyle="font-weight: bold; text-align: center; font-size: 20pt">Original record</span>**********************</p>
+<p style="text-align: center;">**********************<span style="font-weight: bold; text-align: center; font-size: 20pt">Original record</span>**********************</p>
 <br>
 <table>
 
@@ -162,8 +162,7 @@
                                                    name="{{ item.id }}"
                                                    id="{{ item.id }}"
                                                    onchange="{this.value == '' ? document.getElementById('{{ item.name }}').checked='': document.getElementById('{{ item.name }}').checked='checked'}"
-                                                   value="
-                                                           {% for key, value in statistics_tag.items %}{% if key == item.name %}{{ value.2 }}{% endif %}{% endfor %}"/>
+                                                   value="{% for key, value in statistics_tag.items %}{% if key == item.name %}{{ value.2 }}{% endif %}{% endfor %}"/>
 
 
 
