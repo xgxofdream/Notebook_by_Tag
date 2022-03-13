@@ -437,33 +437,41 @@ class English(models.Model):
 
 
         english_styled = {};
-        # 收集信息
-        for english_item in english:
-            # 收集english-source对应关系
-            reference = english_item.reference
-            source = reference.source
-            dict_english_to_source.update({english_item.id:{reference.id:source.id}})
 
-            # 调用
-            # 把笔记中的key_words 和 key_expressions高亮显示出来 via English的功能：text_highlight
-            single_english_note = english_item.text_highlight(english_item)
-            english_styled.update(single_english_note)
+        if english:
+            # 收集信息
+            for english_item in english:
+                # 收集english-source对应关系
+                reference = english_item.reference
+                source = reference.source
+                dict_english_to_source.update({english_item.id:{reference.id:source.id}})
 
-            # 统计source的情况
-            if statistics_source.__contains__(source.name):
-                # 计数
-                statistics_source[source.name][0] = statistics_source[source.name][0] + 1
-                # 记录对应的笔记id
-                statistics_source[source.name][1].append(str(english_item.id))
-                # 记录对应的笔记的source_type
-                statistics_source[source.name][2] =source.type
-            else:
-                count = 1
-                english_id_list = list([str(english_item.id)])
-                source_type = source.type
+                # 调用
+                # 把笔记中的key_words 和 key_expressions高亮显示出来 via English的功能：text_highlight
+                single_english_note = english_item.text_highlight(english_item)
+                english_styled.update(single_english_note)
 
-                statistics_source.update({source.name: [count, english_id_list, source_type]})
+                # 统计source的情况
+                if statistics_source.__contains__(source.name):
+                    # 计数
+                    statistics_source[source.name][0] = statistics_source[source.name][0] + 1
+                    # 记录对应的笔记id
+                    statistics_source[source.name][1].append(str(english_item.id))
+                    # 记录对应的笔记的source_type
+                    statistics_source[source.name][2] =source.type
+                else:
+                    count = 1
+                    english_id_list = list([str(english_item.id)])
+                    source_type = source.type
 
+                    statistics_source.update({source.name: [count, english_id_list, source_type]})
+
+        else:
+            reference = None
+            english_styled = None
+            source = None
+            dict_english_to_source = None
+            statistics_source = None
 
         data = {
             'reference': reference,
@@ -550,13 +558,18 @@ class English(models.Model):
 
         english = English.objects.filter(reference_id__in=reference_id)
 
-        # 调用
-        # 把笔记中的key_words 和 key_expressions高亮显示出来 via English的功能：text_highlight
-        english_styled = {};
+        if english:
 
-        for item in english:
-            single_english_note = item.text_highlight(item)
-            english_styled.update(single_english_note)
+            # 调用
+            # 把笔记中的key_words 和 key_expressions高亮显示出来 via English的功能：text_highlight
+            english_styled = {};
+
+            for item in english:
+                single_english_note = item.text_highlight(item)
+                english_styled.update(single_english_note)
+
+        else:
+            english_styled = None
 
         data = {
             'source': source,

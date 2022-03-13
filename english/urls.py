@@ -21,6 +21,7 @@ from . import views
 
 app_name = 'english'
 
+
 urlpatterns = [
     # 返回首页
     path('', views.index, name='index'),

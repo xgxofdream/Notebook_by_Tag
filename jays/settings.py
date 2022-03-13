@@ -13,6 +13,14 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 from pathlib import Path
 import os
 
+
+'''
+# 全局变量
+'''
+# app = 'english'
+app = 'intelligent_life'
+
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -83,8 +91,7 @@ WSGI_APPLICATION = 'jays.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        #'NAME': 'myenglish_online',
-        'NAME': 'myenglish',
+        'NAME': app,
         'USER': 'root',
         'PASSWORD': '123456',
         'HOST': 'localhost',

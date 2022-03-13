@@ -3,15 +3,8 @@ from django.shortcuts import render, redirect, get_object_or_404
 # from django.conf import settings
 from django.contrib.auth.decorators import login_required
 
-
 import datetime
-
-import os
-
-
 from gtts import gTTS
-
-
 
 # from corenlp_client import CoreNLP # 导入CoreNLP类 # 用于CoreNLP
 # corenlp_dir = "C:/corenlp" # CoreNLP地址 # 用于CoreNLP
@@ -23,10 +16,11 @@ from .models import *
 '''
 # 全局变量
 '''
+# app = 'english'
+app = 'intelligent_life'
+
 web_url = 'http://127.0.0.1:8000/'
-audio_src = './media/english/text_to_speech/'
-
-
+audio_src = './media/' + app + '/text_to_speech/'
 
 def global_params(request):
 
@@ -94,7 +88,7 @@ def reference_list(request, source_id):
 '''
 # 列出Source
 '''
-
+@login_required(login_url=web_url + 'admin')
 def source_list(request, source_type):
 
 
@@ -121,6 +115,7 @@ def source_list(request, source_type):
 '''
 # 列出Tag
 '''
+@login_required(login_url=web_url + 'admin')
 def tag_list(request, id):
     # 调用
     data = Tag().tag_list(id)
@@ -225,11 +220,17 @@ def list_by_source(request, id):
     # 读取数据库-Table English
     data_english = english.source_to_english(id)
 
-    # 读取对tags的统计数据
-    data_tag = english.english_to_tag(data_english['english'])
+    if data_english:
+        # 读取对tags的统计数据
+        data_tag = english.english_to_tag(data_english['english'])
 
-    # 读取对sources的统计数据
-    data_source = english.english_to_source(data_english['english'])
+        # 读取对sources的统计数据
+        data_source = english.english_to_source(data_english['english'])
+
+    else:
+        data_english = None
+        data_tag = None
+        data_source = None
 
 
     context = {
@@ -311,6 +312,7 @@ def english_detail(request, id):
 '''
 # word bench
 '''
+@login_required(login_url=web_url + 'admin')
 def word_bench(request, method, source_type):
 
     # 初始化 context
@@ -428,19 +430,6 @@ def list_by_word(request, id):
     print(word_dict)
 
 
-'''
-# 我的总结
-'''
-def summary(request):
-    summary = 'be building'
-    # 需要传递给模板的对象
-    context = {
-        'summary': summary,
-    }
-
-    # 载入模板，并返回context对象
-    return render(request, 'summary.html', context)
-
 
 '''
 # 录入英语笔记
@@ -485,6 +474,9 @@ def input(request, id):
 
     # 如果Table English没有记录。
     else:
+        last_english_text = None
+        english_styled = None
+
         '''
         列出页码1-5
         '''
@@ -782,7 +774,7 @@ def submit_reference(request):
                'time_dalay': time_dalay}
     return render(request, 'submit.html', context)
 
-
+@login_required(login_url=web_url + 'admin')
 def element_review(request, id):
     # 调用
     data = Tag().tag_list(id)
@@ -1137,4 +1129,20 @@ def submit_update(request, english_id):
         context = {'submission_result': submission_result, 'all_data': all_data, 'input_url': input_url,
                    'time_dalay': time_dalay}
         return render(request, 'submit.html', context)
+
+
+
+'''
+# 我的总结
+'''
+def summary(request):
+
+    summary = 'be building'
+    # 需要传递给模板的对象
+    context = {
+        'summary': summary,
+    }
+
+    # 载入模板，并返回context对象
+    return render(request, 'summary.html', context)
 
