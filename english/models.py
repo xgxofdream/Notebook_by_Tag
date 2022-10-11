@@ -703,9 +703,10 @@ class English(models.Model):
             element = Element.objects.filter(english_id=english.id).values('audio_name')
 
             for item in element:
-                audio_location = folder_location + item['audio_name']
-                os.remove(audio_location)
-                print(audio_location)
+                if item['audio_name']:
+                    audio_location = folder_location + item['audio_name']
+                    os.remove(audio_location)
+                    print(audio_location)
 
 
     def __str__(self):
@@ -870,16 +871,16 @@ class Element(models.Model):
             # print(statistics_tag)
 
             # 整理elements by tag
-            # 字典 dict_element_sorted_by_tag 的结构 {str:{int:str}}
+            # 字典 dict_element_sorted_by_tag 的结构 {str:{int:[]}}
             for tag_item in tag:
                 #print(tag_item)
                 if dict_element_sorted_by_tag.__contains__(tag_item.name):
 
-                    dict_element_sorted_by_tag[tag_item.name].update({element_item.audio_name: element_item.text})
+                    dict_element_sorted_by_tag[tag_item.name].update({element_item.audio_name: [element_item.text,element_item.english_id]})
 
 
                 else:
-                    element_id_text = {element_item.audio_name: element_item.text}
+                    element_id_text = {element_item.audio_name: [element_item.text,element_item.english_id]}
 
                     dict_element_sorted_by_tag.update({tag_item.name: element_id_text})
 

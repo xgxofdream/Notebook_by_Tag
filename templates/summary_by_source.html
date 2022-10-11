@@ -38,7 +38,7 @@ Source:&nbsp&nbsp
 
                 <input type="button" style="background: transparent; border-style: hidden" value="&#9738" id="button{{ key1 }}" onclick="tag == 1 ? (document.getElementById('{{ key1 }}').play(), tag = 0, document.getElementById('button{{ key1 }}').value='&#9746') : (document.getElementById('{{ key1 }}').pause(), tag = 1 , document.getElementById('button{{ key1 }}').value='&#9738')">
 
-                {{ value1|safe }}<br>
+                <a href="{{ web_url }}english/detail/{{ value1.1 }}/" target="_blank">{{ value1.0 }}</a><br>
 
             {% endfor %}
         </details>

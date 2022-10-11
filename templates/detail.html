@@ -28,7 +28,7 @@
 <input type="button" style="background: transparent; border-style: hidden" value="&#9738"
                            id="button{{ english_text_detail.audio_name }}"
                            onclick="tag == 1 ? (document.getElementById('{{ english_text_detail.audio_name }}').play(), tag = 0, document.getElementById('button{{ english_text_detail.audio_name }}').value='&#9746') : (document.getElementById('{{ english_text_detail.audio_name }}').pause(), tag = 1 , document.getElementById('button{{ english_text_detail.audio_name }}').value='&#9738')">
-<p>
+<p style="font-size: 16pt">
             {% for key, value in english_dict.items %}
 
                 {{ value.english_text|safe }}
@@ -56,7 +56,7 @@
                            id="button{{ key1 }}"
                            onclick="tag == 1 ? (document.getElementById('{{ key1 }}').play(), tag = 0, document.getElementById('button{{ key1 }}').value='&#9746') : (document.getElementById('{{ key1 }}').pause(), tag = 1 , document.getElementById('button{{ key1 }}').value='&#9738')">
 
-                    {{ value1|safe }}<br>
+                    <a href="{{ web_url }}english/detail/{{ value1.1 }}/" target="_blank">{{ value1.0 }}</a><br>
 
                 {% endfor %}
 
