@@ -1,6 +1,6 @@
 # 引入redirect重定向模块
 from django.shortcuts import render, redirect, get_object_or_404
-# from django.conf import settings
+from django.conf import settings
 from django.contrib.auth.decorators import login_required
 
 import datetime
@@ -16,11 +16,14 @@ from .models import *
 '''
 # 全局变量
 '''
-# app = 'english'
-app = 'intelligent_life'
+app = 'english'
+# app = 'intelligent_life'
+
+audio_src = './media/' + app + '/text_to_speech/'
+audio_src2 = './media/' + app + '/element_to_speech/'
 
 web_url = 'http://127.0.0.1:8000/'
-audio_src = './media/' + app + '/text_to_speech/'
+
 
 def global_params(request):
 
@@ -29,6 +32,67 @@ def global_params(request):
     return {
         'web_url': web_url,
     }
+'''
+# 将数据库里所有英语笔记转化为音频文件 
+# tempt
+'''
+@login_required(login_url=web_url + 'admin')
+def tempt(request):
+
+    english = English.objects.filter(id__gte=0).filter(id__lte=500)
+    doer = English()
+
+    for item in english:
+        print(item.id)
+        reference = item.reference
+        source = reference.source
+
+        # 创建目录
+        folder_location = audio_src + str(source.id) + '/'
+        doer.create_folder(folder_location)
+
+        # 创建音频
+        doer.create_audio(folder_location, source.id, 0, 0, item)
+
+
+    context = {'greetings': '110'}
+    return render(request, 'index.html', context)
+
+'''
+# 将数据库里 Element Table 里的文本转化为音频文件 
+'''
+def element_to_audio(request):
+
+    element = Element.objects.filter(id=4)
+    doer = English()
+
+    for item in element:
+
+        tag = item.tag
+
+        english = item.english
+        reference = english.reference
+        source = reference.source
+
+
+
+        # 创建目录
+        folder_location = audio_src2 + str(source.id) + '/'
+        doer.create_folder(folder_location)
+
+        # 创建音频
+        text = item.text
+        audio_name = str(source.id) + '-' + str(english.id) + '-' + str(item.id) + '-' + str(tag) + '.mp3'
+        audio_file_location = audio_src2 + audio_name
+        tts = gTTS(text)
+        tts.save(audio_file_location)
+        # 并把名字记入数据库
+        item.audio_name = audio_name
+        item.save()
+
+
+    context = {'greetings': '110'}
+    return render(request, 'index.html', context)
 
 '''
 # 首页
@@ -61,7 +125,7 @@ def reference_list(request, source_id):
     source = Source.objects.get(id=source_id)
 
 
-    if source.type == 'UQ Email':
+    if source.type == 'Email-UQ' or 'Email-General Source':
         display_page_relevant = 'none'
         display_page_irrelevant = ''
     else:
@@ -248,6 +312,39 @@ def list_by_source(request, id):
 
 
 '''
+# 英语笔记小结by Source
+'''
+@login_required(login_url=web_url + 'admin')
+def summary_by_source(request, id):
+    # 实例化一个English
+    english = English()
+
+    # 读取数据库-Table English
+    data_english = english.source_to_english(id)
+
+    # 正向查询:获取Element对应的Tag实例;
+    element = Element()
+    element2 = Element.objects.filter(english_id__in=data_english['english'])
+    data = element.element_to_tag(element2)
+    statistics_tag = data['statistics_tag']
+    dict_element_to_tag = data['dict_element_to_tag']
+    dict_element_sorted_by_tag = data['dict_element_sorted_by_tag']
+
+
+    # 需要传递给模板的对象
+    context = {
+        'source': data_english['source'],
+        'element': element,
+        'statistics_tag':statistics_tag,
+        'dict_element_to_tag': dict_element_to_tag,
+        'dict_element_sorted_by_tag': dict_element_sorted_by_tag,
+    }
+
+    return render(request, 'summary_by_source.html', context)
+
+
+
+'''
 # 英语笔记详情
 '''
 def english_detail(request, id):
@@ -278,6 +375,10 @@ def english_detail(request, id):
     element2 = Element.objects.filter(english_id=id)
     data = element.element_to_tag(element2)
     statistics_tag = data['statistics_tag']
+    dict_element_to_tag = data['dict_element_to_tag']
+    dict_element_sorted_by_tag = data['dict_element_sorted_by_tag']
+
+
 
     # 如果没有音频，则创建音频
     if english_text_detail.audio_name == None:
@@ -303,6 +404,8 @@ def english_detail(request, id):
         'source': source,
         'element': element,
         'statistics_tag':statistics_tag,
+        'dict_element_to_tag': dict_element_to_tag,
+        'dict_element_sorted_by_tag': dict_element_sorted_by_tag,
     }
 
     # 载入模板，并返回context对象
@@ -533,6 +636,7 @@ def input(request, id):
 '''
 def submit(request):
     global audio_src
+    global audio_src2
     # 获取 POST 参数
     all_data = request.body
     english_text = request.POST.get('english_text')
@@ -666,25 +770,26 @@ def submit(request):
     # 创建音频文件，并把名字记入数据库
     '''
     english = English.objects.all().last()
-    # 创建音频
-    text = english_text
-    audio_name = str(english.id) + '.mp3'
-    audio_file_location = audio_src + audio_name
-    tts = gTTS(text)
-    tts.save(audio_file_location)
-    # 并把名字记入数据库
-    english.audio_name = audio_name
-    english.save()
 
+    # 创建目录
+    folder_location = audio_src + str(source_id) + '/'
+    english.create_folder(folder_location)
+
+    # 创建音频
+    english.create_audio(folder_location, source_id, 0, 0, english)
 
     '''
      # 从English中读出刚刚写入的笔记，提取keywords，key_expressions录入Element
-     '''
+     # audio_src2 = './media/' + app + '/element_to_speech/'
+    '''
+    # 创建目录
+    folder_location = audio_src2 + str(source_id) + '/'
+    english.create_folder(folder_location)
+
 
     for key, value in note_dict.items():
 
         tag_obj = Tag.objects.get(id=key)
-
 
         key_word_list = value['key_words']
         key_expression_list = value['key_expressions']
@@ -697,6 +802,12 @@ def submit(request):
             element.save()
             element.tag.add(tag_obj)
 
+            '''
+            # 创建音频文件，并把名字记入数据库
+            '''
+            english.create_audio(folder_location, source_id, tag_obj, element, english)
+
+
         for item in key_expression_list:
             element = Element()
             element.english_id = english.id
@@ -704,6 +815,11 @@ def submit(request):
             element.text = item
             element.save()
             element.tag.add(tag_obj)
+
+            '''
+            # 创建音频文件，并把名字记入数据库
+            '''
+            english.create_audio(folder_location, source_id, tag_obj, element, english)
 
     submission_result = "Succeed!"
 
@@ -774,6 +890,8 @@ def submit_reference(request):
                'time_dalay': time_dalay}
     return render(request, 'submit.html', context)
 
+
+
 @login_required(login_url=web_url + 'admin')
 def element_review(request, id):
     # 调用
@@ -821,9 +939,6 @@ def list_for_element(request):
     }
 
     return render(request, 'list_for_element.html', context)
-
-
-
 
 
 
@@ -933,6 +1048,7 @@ def update(request, english_id):
 def submit_update(request, english_id):
 
     global audio_src
+    global audio_src2
 
     # 准备url：回到update页面
     global web_url
@@ -1011,19 +1127,26 @@ def submit_update(request, english_id):
     # 实例化English
     english = get_object_or_404(English, id=english_id)
 
+
     # 将reference存进数据库
     # 获取reference
     reference_obj = Reference.objects.get(id=reference)
     english.reference = reference_obj
+    # 获取source
+    source = reference_obj.source
 
 
     # 将key_words存入数据库
     if key_words:
         english.key_words = key_words
+    else:
+        english.key_words = None
 
-    # 将key_expressions存入数据库
+        # 将key_expressions存入数据库
     if key_expressions:
         english.key_expressions = key_expressions
+    else:
+        english.key_expressions = None
 
     # 将english_text存入数据库
     if english_text:
@@ -1061,40 +1184,38 @@ def submit_update(request, english_id):
         english.tag.add(tag_obj)
 
     '''
-    # 更新音频文件，并把名字记入数据库
+    # 更新English的音频文件，并把音频文件的名字记入数据库
     '''
-
-    # 获取文本
-    text = english_text
-
-    # 创建文件名和路径
-    audio_name = str(english.id) + '.mp3'
-    audio_file_location = audio_src + audio_name
-
-    # 并把名字记入数据库
-    english.audio_name = audio_name
-    english.save()
-
-    # 生成语音文件并存储
-    tts = gTTS(text)
-    tts.save(audio_file_location)
+    # 创建目录
+    folder_location_english = audio_src + str(source.id) + '/'
+    english.create_folder(folder_location_english)
+    # 更新音频
+    english.create_audio(folder_location_english, source.id, 0, 0, english)
 
 
     '''
-     # 从English中读出刚刚写入的笔记，提取keywords，key_expressions录入Element
+     # 删除旧的element相关的数据（数据库数据，语音文件）
     '''
+    # 删除 audio files
+    # 得到文件所在的目录
+    folder_location_element = audio_src2 + str(source.id) + '/'
+    english.delete_audio('del_element', english, folder_location_element)
 
-    # 清空之前的english_element关系
+    # 清空之前的english_element 和 tag_element 关系
     element = Element()
     element_set = element.english_to_element(english)
-
     for item in element_set:
         item.tag.clear()
         item.delete()
 
-    # 清空之前的tag_element关系
+    '''
+     # 从English中读出刚刚写入的笔记，提取keywords，key_expressions录入Element
+    '''
+    # 创建音频文件的文件夹目录
+    folder_location = audio_src2 + str(source.id) + '/'
+    english.create_folder(folder_location)
 
-
+    # 写入Element，创建Audio files
     for key, value in note_dict.items():
 
         tag_obj = Tag.objects.get(id=key)
@@ -1110,6 +1231,12 @@ def submit_update(request, english_id):
             element.save()
             element.tag.add(tag_obj)
 
+            '''
+            # 创建音频文件，并把名字记入数据库
+            '''
+            english.create_audio(folder_location, source.id, tag_obj, element, english)
+
+
         for item in key_expression_list:
             element = Element()
             element.english_id = english.id
@@ -1117,6 +1244,11 @@ def submit_update(request, english_id):
             element.text = item
             element.save()
             element.tag.add(tag_obj)
+
+            '''
+            # 创建音频文件，并把名字记入数据库
+            '''
+            english.create_audio(folder_location, source.id, tag_obj, element, english)
 
 
     '''
@@ -1145,4 +1277,5 @@ def summary(request):
 
     # 载入模板，并返回context对象
     return render(request, 'summary.html', context)
+
 

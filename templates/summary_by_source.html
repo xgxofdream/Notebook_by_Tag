@@ -1,0 +1,50 @@
+{% include "head.html" %}
+{% include "menu.html" %}
+
+Source:&nbsp&nbsp
+
+{% for source in source %}
+    <a href="{{ web_url }}english/list_by_source/{{ source.id }}/">{{ source.type }}&nbsp|&nbsp{{ source.name }}&nbsp by
+        &nbsp{{ source.author }}</a>&nbsp&nbsp
+{% endfor %}
+
+<p>*************************************************************************</p>
+<div id="audioBox" ></div>
+<br id="spacer" style="display: none">
+<button onclick="checkboxed('english_text')">Pick All</button>
+&nbsp&nbsp
+<button onclick="uncheckboxed('english_text')">Cancel All</button>
+&nbsp&nbsp|&nbsp&nbsp
+<input value="3" type="text" name="cycle_to_play" id="" style="width: 50px; background-color: orange">
+&nbsp&nbsp
+<button onclick="playEnglish()" style="background-color: orange">Play</button>
+
+<p>*************************************************************************</p>
+
+    {% for key, value in dict_element_sorted_by_tag.items %}
+
+        <details style="display: inline-block;vertical-align: text-top;">&nbsp&nbsp|&nbsp
+            <summary>
+                <span style="font-weight: bold">{{ key }}</span>&nbsp&nbsp|&nbsp
+            </summary><br>
+            {% for key1, value1 in value.items %}
+
+                <input type="checkbox" name="english_text" value="{{ MEDIA_URL }}english/element_to_speech/{{ source.0.id }}/{{ key1 }}">
+
+                <audio loop id="{{ key1 }}" style="width: 100px; height: 15px">
+                    <source src="{{ MEDIA_URL }}english/element_to_speech/{{ source.0.id }}/{{ key1 }}" type="audio/mpeg">
+                    Your browser does not support the audio element.
+                </audio>
+
+                <input type="button" style="background: transparent; border-style: hidden" value="&#9738" id="button{{ key1 }}" onclick="tag == 1 ? (document.getElementById('{{ key1 }}').play(), tag = 0, document.getElementById('button{{ key1 }}').value='&#9746') : (document.getElementById('{{ key1 }}').pause(), tag = 1 , document.getElementById('button{{ key1 }}').value='&#9738')">
+
+                {{ value1|safe }}<br>
+
+            {% endfor %}
+        </details>
+
+    {% endfor %}
+
+<p>*************************************************************************</p>
+
+{% include "foot.html" %}

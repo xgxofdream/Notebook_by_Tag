@@ -1,6 +1,9 @@
+import os
 from django.db import models
 from django.contrib.auth.models import User
 from django.db.models import Q
+
+from gtts import gTTS
 
 from stanfordcorenlp import StanfordCoreNLP
 
@@ -185,20 +188,25 @@ class English(models.Model):
         # 清洗
         '''
         word_str = ''
-        word_str = word_str + text + ','
-        # 转化为list via 逗号
-        word_list = word_str.split(',')
 
-        # 去掉list中的空值（因为有的笔记里面，我没有输入key words）
-        while '' in word_list:
-            word_list.remove('')
+        if text:
+            word_str = word_str + text + ','
 
-        # 去掉空格（录入时手误有时候会带上空格）
-        for i in range(len(word_list)):
-            word_list[i] = word_list[i].replace(' ', '')
+            # 转化为list via 逗号
+            word_list = word_str.split(',')
 
-        # 去掉重复的元素
-        word_list = list(set(word_list))
+            # 去掉list中的空值（因为有的笔记里面，我没有输入key words）
+            while '' in word_list:
+                word_list.remove('')
+
+            # 去掉空格（录入时手误有时候会带上空格）
+            for i in range(len(word_list)):
+                word_list[i] = word_list[i].replace(' ', '')
+
+            # 去掉重复的元素
+            word_list = list(set(word_list))
+        else:
+            word_list = ''
 
         return word_list
 
@@ -208,17 +216,18 @@ class English(models.Model):
         # 清洗
         '''
         word_str = ''
-        word_str = word_str + text + ','
-        # 转化为list via 逗号
-        word_list = word_str.split(',')
+        if text:
+            word_str = word_str + text + ','
+            # 转化为list via 逗号
+            word_list = word_str.split(',')
 
-        # 去掉list中的空值（因为有的笔记里面，我没有输入key words）
-        while '' in word_list:
-            word_list.remove('')
-
-
-        # 去掉重复的元素
-        word_list = list(set(word_list))
+            # 去掉list中的空值（因为有的笔记里面，我没有输入key words）
+            while '' in word_list:
+                word_list.remove('')
+            # 去掉重复的元素
+            word_list = list(set(word_list))
+        else:
+            word_list = ''
 
         return word_list
 
@@ -303,7 +312,7 @@ class English(models.Model):
             word_list.remove('')
         # 去掉重复的元素
         word_list = list(set(word_list))
-        print(word_list)
+        # print(word_list)
 
         '''
         # 获取词性
@@ -508,12 +517,12 @@ class English(models.Model):
             tag = english_item.tag.all()
 
             dict_english_to_tag.update({english_item.id:tag})
-            print(tag)
+            # print(tag)
 
 
             # 统计tags的情况
             for tag_item in tag:
-                print(tag_item)
+                # print(tag_item)
                 if statistics_tag.__contains__(tag_item.name):
                     # 计数
                     statistics_tag[tag_item.name][0] = statistics_tag[tag_item.name][0] + 1
@@ -526,7 +535,7 @@ class English(models.Model):
 
                     statistics_tag.update({tag_item.name: [count, english_id_list]})
 
-            print(statistics_tag)
+            # print(statistics_tag)
 
 
 
@@ -641,6 +650,63 @@ class English(models.Model):
         return data
 
 
+    '''
+    # 创建文件夹
+    '''
+    def create_folder(self, path):
+        if not os.path.exists(path):
+            os.makedirs(path)
+        else:
+            print('This folder exists!')
+
+    '''
+    # 创建语音文件
+    '''
+    def create_audio(self, audio_src, source_id, tag, element, english):
+
+        audio_src = audio_src
+
+        if english and not element:
+            text = english.english_text
+            audio_name = str(source_id) + '-' + str(english.id) + '.mp3'
+            audio_file_location = audio_src + audio_name
+            tts = gTTS(text)
+            tts.save(audio_file_location)
+            # 并把名字记入数据库
+            english.audio_name = audio_name
+            english.save()
+
+        if english and element:
+
+            text = element.text
+            audio_name = str(source_id) + '-' + str(english.id) + '-' + str(element.id) + '-' + str(tag.id) + '.mp3'
+            audio_file_location = audio_src + audio_name
+            tts = gTTS(text)
+            tts.save(audio_file_location)
+            # 并把名字记入数据库
+            element.audio_name = audio_name
+            element.save()
+
+        return audio_file_location
+
+
+    '''
+    # 删除语音文件
+    '''
+    def delete_audio(self, target, english, folder_location):
+
+        if target == 'del_english':
+            audio_location = folder_location + english.audio_name
+            os.remove(audio_location)
+
+        if target == 'del_element':
+            element = Element.objects.filter(english_id=english.id).values('audio_name')
+
+            for item in element:
+                audio_location = folder_location + item['audio_name']
+                os.remove(audio_location)
+                print(audio_location)
+
 
     def __str__(self):
         return self.english_text
@@ -656,6 +722,8 @@ class Element(models.Model):
     english = models.ForeignKey(English, on_delete=models.CASCADE, null=True)
     tag = models.ManyToManyField(to=Tag, related_name="for_element", null=True)
     note = models.TextField(null=True)
+    # 是否有音频
+    audio_name = models.CharField(max_length=1000, null=True)
 
     '''
      # 反向查询 Tag to Element
@@ -740,7 +808,7 @@ class Element(models.Model):
             #print(single_english_note)
             english_styled.update(single_english_note)
 
-        print(english_styled)
+        # print(english_styled)
         data = {
             'element': element,
             'english': english,
@@ -765,6 +833,8 @@ class Element(models.Model):
         dict_element_to_tag = {}
         # 初始化 字典的结构{int:[int, []]}
         statistics_tag = {}
+        # 初始化 字典的结构{str:{int:str}}
+        dict_element_sorted_by_tag = {}
 
         for element_item in element:
             # 收集element-tags对应关系
@@ -788,21 +858,39 @@ class Element(models.Model):
                     # 记录对应的element id
                     statistics_tag[tag_item.name][1].append(str(element_item.id))
                     # 记录对应的element text
-                    statistics_tag[tag_item.name][2] = statistics_tag[tag_item.name][2] + element_item.text + ', '
+                    statistics_tag[tag_item.name][2] = statistics_tag[tag_item.name][2] + element_item.text + ','
 
                 else:
                     count = 1
                     element_id_list = list([str(element_item.id)])
-                    element_text_str = element_item.text + ', '
+                    element_text_str = element_item.text + ','
 
                     statistics_tag.update({tag_item.name: [count, element_id_list, element_text_str]})
 
-            print(statistics_tag)
+            # print(statistics_tag)
+
+            # 整理elements by tag
+            # 字典 dict_element_sorted_by_tag 的结构 {str:{int:str}}
+            for tag_item in tag:
+                #print(tag_item)
+                if dict_element_sorted_by_tag.__contains__(tag_item.name):
+
+                    dict_element_sorted_by_tag[tag_item.name].update({element_item.audio_name: element_item.text})
+
+
+                else:
+                    element_id_text = {element_item.audio_name: element_item.text}
+
+                    dict_element_sorted_by_tag.update({tag_item.name: element_id_text})
+
+            # print(dict_element_sorted_by_tag)
 
         data = {
             'element': element,
             'dict_element_to_tag': dict_element_to_tag,
             'statistics_tag': statistics_tag,
+            'dict_element_sorted_by_tag': dict_element_sorted_by_tag,
+
         }
 
         return data

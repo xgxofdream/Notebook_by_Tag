@@ -8,4 +8,5 @@ from .models import *
 admin.site.register(Source)
 admin.site.register(Reference)
 admin.site.register(Tag)
+admin.site.register(English)
 

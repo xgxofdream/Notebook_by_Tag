@@ -23,11 +23,14 @@ app_name = 'english'
 
 
 urlpatterns = [
+
+    # Tempt
+    path('tempt/', views.tempt, name='tempt'),
+
     # 返回首页
     path('', views.index, name='index'),
 
     # 来源列表
-
     # Reference
     path('reference_list/<int:source_id>/', views.reference_list, name='reference_list'),
 
@@ -42,6 +45,9 @@ urlpatterns = [
 
     # 英语笔记列表by Source
     path('list_by_source/<int:id>/', views.list_by_source, name='english_list'),
+
+    # 英语笔记小结by Source
+    path('summary_by_source/<int:id>/', views.summary_by_source, name='english_list'),
 
     # 英语笔记列表by Tag
     # get方法
