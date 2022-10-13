@@ -3,7 +3,8 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.db.models import Q
 
-from gtts import gTTS
+#from gtts import gTTS
+from boto3 import client
 
 from stanfordcorenlp import StanfordCoreNLP
 
@@ -664,14 +665,43 @@ class English(models.Model):
     '''
     def create_audio(self, audio_src, source_id, tag, element, english):
 
+        # 调用 Amazon Polly
+        polly = client(
+            "polly",
+            aws_access_key_id='',
+            aws_secret_access_key='',
+            region_name="us-east-1"
+            )
+
+        conversion_level = 'neural'
+
+        # Joanna represents a female voice with newscaster speaking style
+        # Matthew represents a female voice with newscaster speaking style
+        # Joey represents a male voice
+        # Refer to https://zhuanlan.zhihu.com/p/572962199 for more
+        voice_style = 'Matthew'
+        audio_farmat = 'mp3'
+
+
+
+        # 语音文件存储地址
         audio_src = audio_src
+
 
         if english and not element:
             text = english.english_text
             audio_name = str(source_id) + '-' + str(english.id) + '.mp3'
             audio_file_location = audio_src + audio_name
-            tts = gTTS(text)
-            tts.save(audio_file_location)
+
+
+
+            # 语音合成 via Amazon Polly and boto3
+            response=polly.synthesize_speech(Text=text,OutputFormat=audio_farmat, Engine=conversion_level, VoiceId=voice_style)
+            file = open(audio_file_location, 'wb')
+            file.write(response['AudioStream'].read())
+            file.close()
+
+
             # 并把名字记入数据库
             english.audio_name = audio_name
             english.save()
@@ -681,11 +711,19 @@ class English(models.Model):
             text = element.text
             audio_name = str(source_id) + '-' + str(english.id) + '-' + str(element.id) + '-' + str(tag.id) + '.mp3'
             audio_file_location = audio_src + audio_name
-            tts = gTTS(text)
-            tts.save(audio_file_location)
+
+
+            # 语音合成 via Amazon Polly and boto3
+            response=polly.synthesize_speech(Text=text,OutputFormat=audio_farmat, Engine=conversion_level, VoiceId=voice_style)
+            file = open(audio_file_location, 'wb')
+            file.write(response['AudioStream'].read())
+            file.close()
+
+
             # 并把名字记入数据库
             element.audio_name = audio_name
             element.save()
+
 
         return audio_file_location
 
@@ -700,12 +738,14 @@ class English(models.Model):
             os.remove(audio_location)
 
         if target == 'del_element':
+
             element = Element.objects.filter(english_id=english.id).values('audio_name')
 
             for item in element:
                 if item['audio_name']:
                     audio_location = folder_location + item['audio_name']
-                    os.remove(audio_location)
+                    if os.path.exists(audio_location):
+                        os.remove(audio_location)
                     print(audio_location)
 
 

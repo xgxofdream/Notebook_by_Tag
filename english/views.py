@@ -4,7 +4,7 @@ from django.conf import settings
 from django.contrib.auth.decorators import login_required
 
 import datetime
-from gtts import gTTS
+#from gtts import gTTS
 
 # from corenlp_client import CoreNLP # 导入CoreNLP类 # 用于CoreNLP
 # corenlp_dir = "C:/corenlp" # CoreNLP地址 # 用于CoreNLP
@@ -39,7 +39,7 @@ def global_params(request):
 @login_required(login_url=web_url + 'admin')
 def tempt(request):
 
-    english = English.objects.filter(id__gte=0).filter(id__lte=500)
+    english = English.objects.filter(id__gte=0).filter(id__lte=50)
     doer = English()
 
     for item in english:
