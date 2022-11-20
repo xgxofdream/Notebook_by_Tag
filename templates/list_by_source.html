@@ -51,7 +51,14 @@ Source:&nbsp&nbsp
 
 <p>*************************************************************************</p>
 
-{% for key, value in english_styled.items %}
+{% for reference, english in dict_english_sorted_by_reference.items %}
+<details style="display: inline-block;vertical-align: text-top;">
+
+<summary style="font-style: italic; font-weight: bold">{{ reference }}</summary>
+
+{% for single_english_id, single_english_note in english.items %}
+
+{% for key, value in single_english_note.items %}
     <p>
         <input type="checkbox" name="english_text"
                value="{{ MEDIA_URL }}english/text_to_speech/{{ source.0.id }}/{{ value.audio_name }}">
@@ -73,6 +80,11 @@ Source:&nbsp&nbsp
                 style="font-style: italic; font-weight: normal">Update</span></a>
     </p>
 {% endfor %}
+{% endfor %}
+</details> <br>
+{% endfor %}
+
+
 <p>*************************************************************************</p>
 
 

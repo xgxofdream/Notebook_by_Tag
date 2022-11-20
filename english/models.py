@@ -6,7 +6,8 @@ from django.db.models import Q
 #from gtts import gTTS
 from boto3 import client
 
-from stanfordcorenlp import StanfordCoreNLP
+
+# from stanfordcorenlp import StanfordCoreNLP
 
 '''
 # 英语摘录的分类
@@ -568,11 +569,15 @@ class English(models.Model):
 
         english = English.objects.filter(reference_id__in=reference_id)
 
+
+
         if english:
 
             # 调用
             # 把笔记中的key_words 和 key_expressions高亮显示出来 via English的功能：text_highlight
             english_styled = {};
+
+
 
             for item in english:
                 single_english_note = item.text_highlight(item)
@@ -581,11 +586,36 @@ class English(models.Model):
         else:
             english_styled = None
 
+
+        # 整理English by Reference
+        # 字典 dict_english_sorted_by_reference 的结构 {str:{int:{}}
+        # single_english_note 是字典类型
+        dict_english_sorted_by_reference = {}
+
+        for english_item in english:
+
+            if dict_english_sorted_by_reference.__contains__(english_item.reference):
+
+                single_english_note = english_item.text_highlight(english_item)
+
+                dict_english_sorted_by_reference[english_item.reference].update({english_item.id: single_english_note})
+
+
+            else:
+                single_english_note = english_item.text_highlight(english_item)
+
+                english_id_text = {english_item.id: single_english_note}
+
+                dict_english_sorted_by_reference.update({english_item.reference: english_id_text})
+
+
+
         data = {
             'source': source,
             'reference': reference,
             'english': english,
             'english_styled': english_styled,
+            'dict_english_sorted_by_reference': dict_english_sorted_by_reference,
 
         }
         return data
@@ -664,7 +694,7 @@ class English(models.Model):
     # 创建语音文件
     '''
     def create_audio(self, audio_src, source_id, tag, element, english):
-
+        ''''''
         # 调用 Amazon Polly
         polly = client(
             "polly",
@@ -694,13 +724,20 @@ class English(models.Model):
             audio_file_location = audio_src + audio_name
 
 
-
+            ''''''
             # 语音合成 via Amazon Polly and boto3
             response=polly.synthesize_speech(Text=text,OutputFormat=audio_farmat, Engine=conversion_level, VoiceId=voice_style)
             file = open(audio_file_location, 'wb')
             file.write(response['AudioStream'].read())
             file.close()
 
+            '''
+            # 语音合成
+            tts = gTTS(text)
+
+            # 语音保存
+            tts.save(audio_file_location)
+            '''
 
             # 并把名字记入数据库
             english.audio_name = audio_name
@@ -712,13 +749,21 @@ class English(models.Model):
             audio_name = str(source_id) + '-' + str(english.id) + '-' + str(element.id) + '-' + str(tag.id) + '.mp3'
             audio_file_location = audio_src + audio_name
 
-
+            ''''''
             # 语音合成 via Amazon Polly and boto3
             response=polly.synthesize_speech(Text=text,OutputFormat=audio_farmat, Engine=conversion_level, VoiceId=voice_style)
             file = open(audio_file_location, 'wb')
             file.write(response['AudioStream'].read())
             file.close()
 
+
+            '''
+            # 语音合成
+            tts = gTTS(text)
+
+            # 语音保存
+            tts.save(audio_file_location)
+            '''
 
             # 并把名字记入数据库
             element.audio_name = audio_name

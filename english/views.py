@@ -32,14 +32,16 @@ def global_params(request):
     return {
         'web_url': web_url,
     }
+
+
 '''
-# 将数据库里所有英语笔记转化为音频文件 
+# 将数据库里所有英语笔记转化为音频文件
 # tempt
 '''
 @login_required(login_url=web_url + 'admin')
 def tempt(request):
 
-    english = English.objects.filter(id__gte=0).filter(id__lte=50)
+    english = English.objects.filter(id__gte=7001).filter(id__lte=7200)
     doer = English()
 
     for item in english:
@@ -53,42 +55,6 @@ def tempt(request):
 
         # 创建音频
         doer.create_audio(folder_location, source.id, 0, 0, item)
-
-
-    context = {'greetings': '110'}
-    return render(request, 'index.html', context)
-
-'''
-# 将数据库里 Element Table 里的文本转化为音频文件 
-'''
-def element_to_audio(request):
-
-    element = Element.objects.filter(id=4)
-    doer = English()
-
-    for item in element:
-
-        tag = item.tag
-
-        english = item.english
-        reference = english.reference
-        source = reference.source
-
-
-
-        # 创建目录
-        folder_location = audio_src2 + str(source.id) + '/'
-        doer.create_folder(folder_location)
-
-        # 创建音频
-        text = item.text
-        audio_name = str(source.id) + '-' + str(english.id) + '-' + str(item.id) + '-' + str(tag) + '.mp3'
-        audio_file_location = audio_src2 + audio_name
-        tts = gTTS(text)
-        tts.save(audio_file_location)
-        # 并把名字记入数据库
-        item.audio_name = audio_name
-        item.save()
 
 
     context = {'greetings': '110'}
@@ -302,6 +268,8 @@ def list_by_source(request, id):
         'reference': data_english['reference'],
         'english': data_english['english'],
         'english_styled': data_english['english_styled'],
+        'dict_english_sorted_by_reference': data_english['dict_english_sorted_by_reference'],
+
         'statistics_tag': data_tag['statistics_tag'],
         'dict_english_to_tag': data_tag['dict_english_to_tag'],
         'statistics_source': data_source['statistics_source'],
@@ -377,23 +345,6 @@ def english_detail(request, id):
     statistics_tag = data['statistics_tag']
     dict_element_to_tag = data['dict_element_to_tag']
     dict_element_sorted_by_tag = data['dict_element_sorted_by_tag']
-
-
-
-    # 如果没有音频，则创建音频
-    if english_text_detail.audio_name == None:
-
-        # 创建音频
-        text = english_text_detail.english_text
-        audio_name = str(english_text_detail.id) + '.mp3'
-        audio_file_location = audio_src + audio_name
-        tts = gTTS(text)
-        tts.save(audio_file_location)
-        # 并把名字记入数据库
-        english_text_detail.audio_name = audio_name
-        english_text_detail.save()
-
-
 
     # 需要传递给模板的对象
     context = {
@@ -564,16 +515,31 @@ def input(request, id):
 
         last_reference = last_english_text.reference
 
-
         '''
         列出最新笔记所在页码之后的10页，即 last_reference.id+10
         '''
         # 找出书名
         source = Source.objects.get(id=id)
 
+        #按照 id 大小重新排列 reference
+        reference_id = reference.values_list('id',flat=True).order_by('id')
+
+        #转化为 list
+        reference_id_list = list(reference_id)
+
+        #获取reference_range中 last_reference.id 的下标
+        last_reference_index = reference_id_list.index(last_reference.id)
+
+        #获取last_reference.id前面第 5 个 reference 的 id
+        prior = 5
+
+        if last_reference_index-prior < 0:
+            last_reference_prior_id = reference_id_list[0]
+        else:
+            last_reference_prior_id = reference_id_list[last_reference_index-prior]
+
         # 找出当前有笔记的页码往后10页的范围 # 有问题：当不是连续输入的referncence
-        reference_range = reference.order_by('id').filter(id__gte=last_reference.id)[:10]
-        #print(reference_range)
+        reference_range = reference.order_by('id').filter(id__gte=last_reference_prior_id)[:15]
 
     # 如果Table English没有记录。
     else:
@@ -1277,5 +1243,3 @@ def summary(request):
 
     # 载入模板，并返回context对象
     return render(request, 'summary.html', context)
-
-
