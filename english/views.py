@@ -1,3 +1,11 @@
+
+# 软件包：读取图片中的文字
+import cv2
+import pytesseract
+
+# 上传图片
+from .forms import ImageForm
+
 # 引入redirect重定向模块
 from django.shortcuts import render, redirect, get_object_or_404
 from django.conf import settings
@@ -11,6 +19,8 @@ import datetime
 
 import english.models
 from .models import *
+
+
 
 
 '''
@@ -59,6 +69,7 @@ def tempt(request):
 
     context = {'greetings': '110'}
     return render(request, 'index.html', context)
+
 
 '''
 # 首页
@@ -583,18 +594,66 @@ def input(request, id):
 
 
 
-    #####################################################
+    ########################Read text in image#############################
 
-    context = {
-        'tag_dict': tag_dict,
-        'all_tag_list': all_tag_list,
-        'reference_range': reference_range,
-        'source': source,
-        'last_reference': last_reference,
-        'last_english_text': last_english_text,
-        'english_styled':english_styled,
-    }
-    return render(request, 'input.html', context)
+    pytesseract.pytesseract.tesseract_cmd = r'C:\Users\liuji\AppData\Local\Programs\Tesseract-OCR\tesseract.exe'
+
+    """Process images uploaded by users"""
+    if request.method == 'POST':
+        form = ImageForm(request.POST, request.FILES)
+        if form.is_valid():
+            form.save()
+            # Get the current instance object to display in the template
+            img_obj = form.instance
+
+
+            # Read text in the image
+            img_src = '.' + img_obj.image.url
+
+            img = cv2.imread(img_src)
+            text_in_img = pytesseract.image_to_string(img)
+
+            # 需要传递给模板的对象
+            context = {
+                'tag_dict': tag_dict,
+                'all_tag_list': all_tag_list,
+                'reference_range': reference_range,
+                'source': source,
+                'last_reference': last_reference,
+                'last_english_text': last_english_text,
+                'english_styled': english_styled,
+
+                # Text in Image
+                'text_in_img': text_in_img,
+                'form': form,
+                'img_obj': img_obj,
+            }
+            return render(request, 'input.html', context)
+
+
+
+    else:
+        form = ImageForm()
+        text_in_img = "None or failed"
+        # 需要传递给模板的对象
+        context = {
+            'tag_dict': tag_dict,
+            'all_tag_list': all_tag_list,
+            'reference_range': reference_range,
+            'source': source,
+            'last_reference': last_reference,
+            'last_english_text': last_english_text,
+            'english_styled': english_styled,
+
+            # Text in Image
+            'text_in_img': text_in_img,
+            'form': form,
+        }
+        return render(request, 'input.html', context)
+
+    ######################################################
+
+
 
 
 '''
@@ -1234,12 +1293,43 @@ def submit_update(request, english_id):
 # 我的总结
 '''
 def summary(request):
+    pytesseract.pytesseract.tesseract_cmd = r'C:\Users\liuji\AppData\Local\Programs\Tesseract-OCR\tesseract.exe'
 
-    summary = 'be building'
-    # 需要传递给模板的对象
-    context = {
-        'summary': summary,
-    }
+    """Process images uploaded by users"""
+    if request.method == 'POST':
+        form = ImageForm(request.POST, request.FILES)
+        if form.is_valid():
+            form.save()
+            # Get the current instance object to display in the template
+            img_obj = form.instance
 
-    # 载入模板，并返回context对象
-    return render(request, 'summary.html', context)
+
+            # Read text in the image
+            img_src = '.' + img_obj.image.url
+
+            img = cv2.imread(img_src)
+            text_in_img = pytesseract.image_to_string(img)
+
+            # 需要传递给模板的对象
+            context = {
+                'text_in_img': text_in_img,
+                'form': form,
+                'img_obj': img_obj,
+            }
+
+            return render(request, 'summary.html', context)
+
+
+
+    else:
+        form = ImageForm()
+        text_in_img = "None or failed"
+        # 需要传递给模板的对象
+        context = {
+            'text_in_img': text_in_img,
+            'form': form,
+        }
+        # 载入模板，并返回context对象
+        return render(request, 'summary.html', context)
+
+

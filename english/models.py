@@ -6,8 +6,28 @@ from django.db.models import Q
 #from gtts import gTTS
 from boto3 import client
 
+'''
+# 全局变量
+'''
+app = 'english'
+# app = 'intelligent_life'
+
 
 # from stanfordcorenlp import StanfordCoreNLP
+
+class Image(models.Model):
+    title = models.CharField(max_length=200)
+    capture_location = models.CharField(max_length=1000)
+
+    # 这两个列分别表示英文摘录的创建时间和最后一次修改时间，存储时间的字段用 DateTimeField 类型。
+    created_time = models.DateTimeField(null=True)
+    modified_time = models.DateTimeField(null=True)
+
+    image = models.ImageField(upload_to = app + '/image_to_text')
+    #image = models.ImageField(upload_to='users/%Y/%m/%d/', blank=True)
+
+    def __str__(self):
+        return self.title
 
 '''
 # 英语摘录的分类
