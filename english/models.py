@@ -870,9 +870,23 @@ class Element(models.Model):
         # 去除重复items
         all_element_text = all_element_text.order_by('id').distinct()
 
+
+
+        # 初始化 字典的结构{element_id:}
+        dict_element = {}
+
         element_id_list = []
         for item in all_element_text:
             element_id_list.append(str(item.id))
+            english = English.objects.get(id=item.english_id)
+            reference = english.reference
+            source = reference.source
+
+            #tag = item.tag.all()
+            #dict_element.update({item: [tag, english, source]})
+            dict_element.update({item: {english: source}})
+
+
 
 
 
@@ -882,6 +896,7 @@ class Element(models.Model):
             'element_id_list': element_id_list,
             'intersect_or_not': intersect_or_not,
             'tag_set': tag_set,
+            'dict_element': dict_element,
         }
 
         return data
@@ -905,6 +920,7 @@ class Element(models.Model):
         english = English.objects.filter(id__in=english_id)
         #print(english)
 
+
         # 调用
         # 把笔记中的key_words 和 key_expressions高亮显示出来 via English的功能：text_highlight
         english_styled = {};
@@ -912,7 +928,10 @@ class Element(models.Model):
         for item in english:
             single_english_note = item.text_highlight(item)
             #print(single_english_note)
-            english_styled.update(single_english_note)
+            reference = item.reference
+            source = reference.source
+
+            english_styled.update({item: [single_english_note, source]})
 
         # print(english_styled)
         data = {
@@ -943,6 +962,12 @@ class Element(models.Model):
         dict_element_sorted_by_tag = {}
 
         for element_item in element:
+            #收集element-source对应关系
+            english = English.objects.get(id=element_item.english_id)
+            reference = english.reference
+            source = reference.source
+
+
             # 收集element-tags对应关系
             tag = element_item.tag.all()
             tag_list = []
@@ -981,11 +1006,11 @@ class Element(models.Model):
                 #print(tag_item)
                 if dict_element_sorted_by_tag.__contains__(tag_item.name):
 
-                    dict_element_sorted_by_tag[tag_item.name].update({element_item.audio_name: [element_item.text,element_item.english_id]})
+                    dict_element_sorted_by_tag[tag_item.name].update({element_item.audio_name: [element_item.text,element_item.english_id,source.id]})
 
 
                 else:
-                    element_id_text = {element_item.audio_name: [element_item.text,element_item.english_id]}
+                    element_id_text = {element_item.audio_name: [element_item.text,element_item.english_id,source.id]}
 
                     dict_element_sorted_by_tag.update({tag_item.name: element_id_text})
 

@@ -102,9 +102,10 @@ def reference_list(request, source_id):
     source = Source.objects.get(id=source_id)
 
 
-    if source.type == 'Email-UQ' or 'Email-General Source':
+    if source.type == 'Email-UQ' and 'Email-General Source':
         display_page_relevant = 'none'
         display_page_irrelevant = ''
+
     else:
         display_page_relevant = ''
         display_page_irrelevant = 'none'
@@ -951,14 +952,23 @@ def list_for_element(request):
     data_english = element.element_to_english(element_id_list)
 
 
+    # 正向查询:获取Element对应的Tag实例;
+    all_element_text = data_element['all_element_text']
+    data = element.element_to_tag(all_element_text)
+
+    dict_element_sorted_by_tag = data['dict_element_sorted_by_tag']
 
 
     # 需要传递给模板的对象
     context = {
-        'all_element_text': data_element['all_element_text'],
+        'all_element_text': all_element_text,
         'intersect_or_not': data_element['intersect_or_not'],
         'tag_set': data_element['tag_set'],
+        'dict_element': data_element['dict_element'],
+
         'english_styled':data_english['english_styled'],
+
+        'dict_element_sorted_by_tag': dict_element_sorted_by_tag,
 
 
     }
