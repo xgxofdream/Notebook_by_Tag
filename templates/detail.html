@@ -19,7 +19,7 @@
 </p>
 
 <p>*************************************************************************</p>
-
+Synthetic audio &nbsp
 <audio loop id="{{ english_text_detail.audio_name }}" style="width: 200px; height: 30px">
     <source src="{{ MEDIA_URL }}english/text_to_speech/{{ source.id }}/{{ english_text_detail.audio_name }}"
             type="audio/mpeg">
@@ -28,6 +28,21 @@
 <input type="button" style="background: transparent; border-style: hidden" value="&#9738"
                            id="button{{ english_text_detail.audio_name }}"
                            onclick="tag == 1 ? (document.getElementById('{{ english_text_detail.audio_name }}').play(), tag = 0, document.getElementById('button{{ english_text_detail.audio_name }}').value='&#9746') : (document.getElementById('{{ english_text_detail.audio_name }}').pause(), tag = 1 , document.getElementById('button{{ english_text_detail.audio_name }}').value='&#9738')">
+{% if video.video_to_mp3 %}
+&nbsp&nbsp|&nbsp&nbsp Original audio &nbsp
+<audio loop id="{{ video.video_to_mp3 }}" style="width: 200px; height: 30px">
+                        <source src="{{ MEDIA_URL }}english/video_to_mp3/{{ video.video_to_mp3 }}" type="audio/mpeg">
+                        <source src="{{ MEDIA_URL }}english/video_to_mp3/{{ video.video_to_mp3 }}" type="audio/ogg">
+            type="audio/mpeg">
+    Your browser does not support the audio element.
+</audio>
+<input type="button" style="background: transparent; border-style: hidden" value="&#9738"
+                           id="button{{ video.video_to_mp3 }}"
+                           onclick="tag == 1 ? (document.getElementById('{{ video.video_to_mp3 }}').play(), tag = 0, document.getElementById('button{{ video.video_to_mp3 }}').value='&#9746') : (document.getElementById('{{ video.video_to_mp3 }}').pause(), tag = 1 , document.getElementById('button{{ video.video_to_mp3 }}').value='&#9738')">
+
+{% endif %}
+
+
 <p style="font-size: 16pt">
             {% for key, value in english_dict.items %}
 
@@ -78,7 +93,51 @@
 <p>*************************************************************************</p>
 
 
+<br><br><br>
+<details>
+    <summary style="font-size: 30pt; text-align: center">Video/Image</summary>
 
+    <table>
+
+            <tr>
+            <td>
+              {% if video.video_name %}
+                    <video width="420" controls>
+                      <source src="{{ MEDIA_URL }}english/video/{{ video.video_name }}" type="video/mp4">
+                    Your browser does not support the video tag.
+                    </video>
+              {% else %}
+              NO Video Input
+              {% endif %}
+            </td>
+        </tr>
+            <tr>
+            <td>
+              {% if video.video_to_mp3 %}
+                    <audio controls>
+                        <source src="{{ MEDIA_URL }}english/video_to_mp3/{{ video.video_to_mp3 }}" type="audio/mpeg">
+                        <source src="{{ MEDIA_URL }}english/video_to_mp3/{{ video.video_to_mp3 }}" type="audio/ogg">
+                        Your browser does not support the audio element.
+                    </audio>
+              {% else %}
+              NO Audio extracted from the Video Input 000
+              {% endif %}
+            </td>
+        </tr>
+        <tr>
+            <td>
+
+              {% if image.image_name %}
+                   <img src="{{ MEDIA_URL }}english/image/{{ image.image_name }}" alt="internet error" style="max-height:300px">
+              {% else %}
+              NO Image Input
+              {% endif %}
+
+            </td>
+        </tr>
+
+    </table>
+</details>
 
 
 <br><br><br>

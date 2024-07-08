@@ -36,6 +36,26 @@
 
         </td>
     </tr>
+    <tr>
+        <td style="font-weight: bold">
+            Multimedia
+        </td>
+        <td style="font-size: 30px;">
+
+        {% if last_english_text_video.video_name %}
+            |&nbsp&nbsp
+                <a target="_blank" href="{{ MEDIA_URL }}english/video/{{ last_english_text_video.video_name }}">Video</a>
+                &nbsp&nbsp|&nbsp&nbsp
+                <a target="_blank" href="{{ MEDIA_URL }}english/video_to_mp3/{{ last_english_text_video.video_to_mp3 }}">Audio of Video </a>
+                &nbsp&nbsp|&nbsp&nbsp
+        {% endif %}
+            {% if last_english_text_image.image_name %}
+                |&nbsp&nbsp
+            <a target="_blank" href="{{ MEDIA_URL }}english/image/{{ last_english_text_image.image_name }}">Image</a>
+                &nbsp&nbsp|
+            {% endif %}
+        </td>
+    </tr>
 </table>
 <br><br><br>
 
@@ -46,18 +66,38 @@
 
 
 <details style="font-weight: bold; text-align: center">
-    <summary>Read Text from Image</summary>
+    <summary style="color:darkorange">Read Text from Image</summary>
 
     <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
-        {{ form.as_p }}
+        {{ image_form.as_p }}
         <button type="submit">Upload</button>
     </form>
 
-    {% if img_obj %}
-        <h3>Succesfully uploaded : {{ img_obj.title }}</h3>
-        <img src="{{ img_obj.image.url }}" alt="connect" style="max-height:300px">
+    {% if image.id %}
+        <h3>Successfully uploaded : {{ image.image_name }}</h3>
+        <img src="{{ MEDIA_URL }}english/image/{{ image.image_name }}" alt="connect" style="max-height:300px">
     {% endif %}
+<p>-----------------------------------------------------------------------------------------------</p>
+</details><br>
+
+
+<details style="font-weight: bold; text-align: center">
+    <summary style="color: darkgreen">Upload Video & Extract Audio & Audio to Text</summary>
+
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ video_form.as_p}}
+        <button type="submit">Upload</button>
+    </form>
+
+  {% if video.id %}
+        <h3>Successfully uploaded : {{ video.video_name }}</h3>
+        <video width="420" controls>
+          <source src="{{ MEDIA_URL }}english/video/{{ video.video_name }}" type="video/mp4">
+        Your browser does not support the video tag.
+        </video>
+  {% endif %}
 <p>-----------------------------------------------------------------------------------------------</p>
 </details><br>
 
@@ -66,6 +106,13 @@
 
 <form action="{{ web_url }}english/submit/" method="post"> {% csrf_token %}
 
+  {% if video.id %}
+    <input type="hidden" name="video_input" value="{{ video.id }}"/>
+  {% endif %}
+
+  {% if image.id %}
+    <input type="hidden" name="image_input" value="{{ image.id }}"/>
+  {% endif %}
 
     <br>
 
@@ -97,7 +144,7 @@
             <td style="text-align: center">
                 <p style="font-weight: bold">>>Text<<</p>
                 <textarea style="font-size: 20pt" id=" " name="english_text" rows="6"
-                          cols="100">{{ text_in_img }}</textarea>
+                          cols="100">{{ text_in_img_or_video }}</textarea>
                 <br><br>
             </td>
         </tr>

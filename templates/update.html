@@ -51,6 +51,34 @@
 
         </td>
     </tr>
+
+    <tr>
+        <td style="font-weight: bold; vertical-align: middle">Image</td>
+        <td>
+              {% if image.image_name %}
+                   <img src="{{ MEDIA_URL }}english/image/{{ image.image_name }}" alt="internet error" style="max-height:300px">
+              {% else %}
+              NO Image Input
+              {% endif %}
+
+        </td>
+    </tr>
+
+    <tr>
+        <td style="font-weight: bold; vertical-align: middle">Video</td>
+        <td>
+              {% if video.video_name %}
+                    <video width="420" controls>
+                      <source src="{{ MEDIA_URL }}english/video/{{ video.video_name }}" type="video/mp4">
+                    Your browser does not support the video tag.
+                    </video>
+              {% else %}
+              NO Video Input
+              {% endif %}
+
+        </td>
+    </tr>
+
     <tr>
         <td style="font-weight: bold; vertical-align: middle">Analysis</td>
         <td>

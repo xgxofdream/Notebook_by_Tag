@@ -1,5 +1,5 @@
 from django import forms
-from .models import Image
+from .models import Image, Video
 import datetime
 
 import socket
@@ -19,18 +19,34 @@ def extract_ip():
 
 class ImageForm(forms.ModelForm):
     """Form for the image model"""
-
     class Meta:
         model = Image
         fields = (
-            'image',
-            'title',
-            'capture_location',
+            'image_name',
             'created_time',
+            'capture_location',
+            'description',
 
         )
 
-    title = forms.CharField(initial='Not specified yet')
+    description = forms.Textarea()
     capture_location = forms.GenericIPAddressField(initial=extract_ip())
-    created_time = forms.DateTimeField(initial=datetime.datetime.utcnow())
-    image = forms.FileField(widget=forms.FileInput(attrs={'accept': 'image/*', 'multiple':True}))
+    created_time = forms.DateTimeField(initial=datetime.datetime.now())
+    image_name = forms.FileField(widget=forms.FileInput(attrs={'accept': 'image/*', 'multiple':True}))
+
+class VideoForm(forms.ModelForm):
+    """Form for the video model"""
+    class Meta:
+        model = Video
+        fields = (
+            'video_name',
+            'created_time',
+            'capture_location',
+            'description',
+
+        )
+
+    description = forms.Textarea()
+    capture_location = forms.GenericIPAddressField(initial=extract_ip())
+    created_time = forms.DateTimeField(initial=datetime.datetime.now())
+    video_name = forms.FileField(widget=forms.FileInput(attrs={'accept': 'video/*', 'multiple':True}))

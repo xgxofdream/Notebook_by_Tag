@@ -3,6 +3,8 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.db.models import Q
 
+from django.shortcuts import get_object_or_404
+
 #from gtts import gTTS
 from boto3 import client
 
@@ -15,19 +17,6 @@ app = 'english'
 
 # from stanfordcorenlp import StanfordCoreNLP
 
-class Image(models.Model):
-    title = models.CharField(max_length=200)
-    capture_location = models.CharField(max_length=1000)
-
-    # 这两个列分别表示英文摘录的创建时间和最后一次修改时间，存储时间的字段用 DateTimeField 类型。
-    created_time = models.DateTimeField(null=True)
-    modified_time = models.DateTimeField(null=True)
-
-    image = models.ImageField(upload_to = app + '/image_to_text')
-    #image = models.ImageField(upload_to='users/%Y/%m/%d/', blank=True)
-
-    def __str__(self):
-        return self.title
 
 '''
 # 英语摘录的分类
@@ -179,8 +168,10 @@ class English(models.Model):
     words_to_learn = models.TextField(null=True)
     note = models.TextField(null=True)
 
-    # 是否有音频
-    audio_name = models.CharField(max_length=100, null=True)
+    # 是否生成了音频
+    audio_name = models.CharField(max_length=255, null=True)
+
+
 
     # 这是分类，标签和来源。
     # 我们在这里把文章对应的数据库表和分类、标签对应的数据库表关联了起来，但是关联形式稍微有点不同。
@@ -188,13 +179,18 @@ class English(models.Model):
     # 对多的关联关系。且自 django 2.0 以后，ForeignKey 必须传入一个 on_delete 参数用来指定当关联的
     # 数据被删除时，被关联的数据的行为。
     # 我们这里假定当某个分类被删除时，该分类下全部文章也同时被删除，因此使用 on_delete=models.CASCADE 参数，意为级联删除。
+
     # 而对于标签来说，一篇文章可以有多个标签，同一个标签下也可能有多篇文章，所以我们使用
     # ManyToManyField，表明这是多对多的关联关系。
     # 同时我们规定文章可以没有标签，因此为标签 tags 指定了 blank=True。指定 CharField 的 blank=True 参数值后就可以允许空值了。
     category = models.ForeignKey(Category, on_delete=models.CASCADE, null=True)
     tag = models.ManyToManyField(to=Tag, related_name="notes", null=True)
     summary = models.ManyToManyField(to=Tag, related_name="summary_notes", null=True)
+
     reference = models.ForeignKey(Reference, on_delete=models.CASCADE, null=True)
+
+    image_id = models.CharField(max_length=255, null=True)
+    video_id = models.CharField(max_length=255, null=True)
 
     # 作者。这里 User 是从 django.contrib.auth.models 导入的。
     # django.contrib.auth 是 django 内置的应用，专门用于处理网站用户的注册、登录等流程，User 是
@@ -283,13 +279,27 @@ class English(models.Model):
             # 替换掉english_text无<span style>标记的key_words
             english_text = english_text.replace(keyword_list[i], styled_key_words)
 
+        '''笔记的其他数据'''
+        item_image = Image()
+        item_video = Video()
+        if item.image_id:
+            item_image = get_object_or_404(Image, id=item.image_id)
+        if item.video_id:
+            item_video = get_object_or_404(Video, id=item.video_id)
+
         '''把笔记数据装进字典'''
         key = item.id
         value = {
             'english_text': english_text,
             'key_words': item.key_words,
             'key_expressions': item.key_expressions,
+
             'audio_name': item.audio_name,
+
+            'image_name': item_image.image_name,
+            'video_name': item_video.video_name,
+
+            'video_to_mp3_name': item_video.video_to_mp3,
         }
 
         english_dict.update({key: value})
@@ -612,22 +622,19 @@ class English(models.Model):
         # single_english_note 是字典类型
         dict_english_sorted_by_reference = {}
 
+
         for english_item in english:
 
             if dict_english_sorted_by_reference.__contains__(english_item.reference):
 
                 single_english_note = english_item.text_highlight(english_item)
-
                 dict_english_sorted_by_reference[english_item.reference].update({english_item.id: single_english_note})
-
 
             else:
                 single_english_note = english_item.text_highlight(english_item)
 
                 english_id_text = {english_item.id: single_english_note}
-
                 dict_english_sorted_by_reference.update({english_item.reference: english_id_text})
-
 
 
         data = {
@@ -818,6 +825,44 @@ class English(models.Model):
         return self.english_text
 
 
+'''
+# 来自图片的英语摘录
+'''
+class Image(models.Model):
+
+    english = models.ForeignKey(English, on_delete=models.CASCADE, null=True)
+
+    description = models.TextField(null=True)
+    capture_location = models.CharField(max_length=1000, null=True)
+
+    # 这两个列分别表示英文摘录的创建时间和最后一次修改时间，存储时间的字段用 DateTimeField 类型。
+    created_time = models.DateTimeField(null=True)
+    modified_time = models.DateTimeField(null=True)
+
+    image_name = models.ImageField(null=True, upload_to=app + '/image')
+
+'''
+# 来自视频的英语摘录
+'''
+class Video(models.Model):
+
+    english = models.ForeignKey(English, on_delete=models.CASCADE, null=True)
+
+    description = models.TextField(null=True)
+    capture_location = models.CharField(max_length=1000,null=True)
+
+    # 从视频中提取的声音的存储位置
+    video_to_mp3 = models.CharField(max_length=1000,null=True)
+
+    # 从视频中提取的声音的转化成文本
+    video_to_mp3_to_text = models.CharField(max_length=1000,null=True)
+
+    # 这两个列分别表示英文摘录的创建时间和最后一次修改时间，存储时间的字段用 DateTimeField 类型。
+    created_time = models.DateTimeField(null=True)
+    modified_time = models.DateTimeField(null=True)
+
+    # 上传的视频的存储位置
+    video_name = models.FileField(null=True,upload_to = app + '/video')
 
 '''
 # 英语摘录的单词和表达

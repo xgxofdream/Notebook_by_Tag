@@ -78,6 +78,23 @@ Source:&nbsp&nbsp
         </a>&nbsp&nbsp|&nbsp&nbsp
         <a href="{{ web_url }}english/update/{{ key }}/"><span
                 style="font-style: italic; font-weight: normal">Update</span></a>
+        {% if value.video_name %}
+    &nbsp&nbsp|&nbsp&nbsp
+        <a target="_blank" href="{{ MEDIA_URL }}english/video/{{ value.video_name }}"><span
+                style="font-style: italic; font-weight: normal">Video</span></a>
+        {% endif %}
+    {% if value.video_to_mp3_name %}
+    &nbsp&nbsp|&nbsp&nbsp
+        <a target="_blank" href="{{ MEDIA_URL }}english/video_to_mp3/{{ value.video_to_mp3_name }}"><span
+                style="font-style: italic; font-weight: normal">Audio of the Video</span></a>
+    {% endif %}
+    {% if value.image_name %}
+        &nbsp&nbsp|&nbsp&nbsp
+        <a target="_blank" href="{{ MEDIA_URL }}english/image/{{ value.image_name }}"><span
+                style="font-style: italic; font-weight: normal">Image</span></a>
+    {% endif %}
+    &nbsp&nbsp|&nbsp&nbsp
+
     </p>
 {% endfor %}
 {% endfor %}

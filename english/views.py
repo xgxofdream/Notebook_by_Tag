@@ -1,10 +1,14 @@
-
 # 软件包：读取图片中的文字
 import cv2
 import pytesseract
 
-# 上传图片
-from .forms import ImageForm
+# 软件包：从视频提取音频，再转成文字
+from moviepy.editor import AudioFileClip
+import speech_recognition as sr
+
+# 上传: 图片/视频
+from .forms import ImageForm, VideoForm
+
 
 # 引入redirect重定向模块
 from django.shortcuts import render, redirect, get_object_or_404
@@ -12,6 +16,7 @@ from django.conf import settings
 from django.contrib.auth.decorators import login_required
 
 import datetime
+import random
 #from gtts import gTTS
 
 # from corenlp_client import CoreNLP # 导入CoreNLP类 # 用于CoreNLP
@@ -31,6 +36,9 @@ app = 'english'
 
 audio_src = './media/' + app + '/text_to_speech/'
 audio_src2 = './media/' + app + '/element_to_speech/'
+audio_src3 = './media/' + app + '/video_to_mp3/'
+video_src = './media/' + app + '/video/'
+image_src = './media/' + app + '/image/'
 
 web_url = 'http://127.0.0.1:8000/'
 
@@ -339,8 +347,6 @@ def english_detail(request, id):
     single_english_note = english_text_detail.text_highlight(english_text_detail)
     english_dict.update(single_english_note)
 
-
-
     # 获取对应的Reference实例
     reference = english_text_detail.reference
 
@@ -358,6 +364,15 @@ def english_detail(request, id):
     dict_element_to_tag = data['dict_element_to_tag']
     dict_element_sorted_by_tag = data['dict_element_sorted_by_tag']
 
+    image = Image()
+    if english_text_detail.image_id:
+        image_id = english_text_detail.image_id
+        image = get_object_or_404(Image, id=image_id)
+    video = Video()
+    if english_text_detail.video_id:
+        video_id = english_text_detail.video_id
+        video = get_object_or_404(Video, id=video_id)
+
     # 需要传递给模板的对象
     context = {
         'english_text_detail': english_text_detail,
@@ -366,6 +381,8 @@ def english_detail(request, id):
         'tag': tag,
         'source': source,
         'element': element,
+        'video': video,
+        'image': image,
         'statistics_tag':statistics_tag,
         'dict_element_to_tag': dict_element_to_tag,
         'dict_element_sorted_by_tag': dict_element_sorted_by_tag,
@@ -525,6 +542,16 @@ def input(request, id):
         last_english_text = all_english_text.order_by('id').last()
         english_styled = last_english_text.text_highlight(last_english_text)
 
+        last_english_text_image = Image()
+        if last_english_text.image_id:
+            last_english_text_image_id = last_english_text.image_id
+            last_english_text_image = get_object_or_404(Image, id=last_english_text_image_id)
+
+        last_english_text_video = Video()
+        if last_english_text.video_id:
+            last_english_text_video_id = last_english_text.video_id
+            last_english_text_video = get_object_or_404(Video, id=last_english_text_video_id)
+
         last_reference = last_english_text.reference
 
         '''
@@ -557,6 +584,9 @@ def input(request, id):
     else:
         last_english_text = None
         english_styled = None
+
+        last_english_text_video = None
+        last_english_text_image = None
 
         '''
         列出页码1-5
@@ -595,24 +625,51 @@ def input(request, id):
 
 
 
-    ########################Read text in image#############################
+    ########################A process of reading image and video#############################
 
     pytesseract.pytesseract.tesseract_cmd = r'C:\Users\liuji\AppData\Local\Programs\Tesseract-OCR\tesseract.exe'
 
     """Process images uploaded by users"""
     if request.method == 'POST':
-        form = ImageForm(request.POST, request.FILES)
-        if form.is_valid():
-            form.save()
+        # 如果上传的是：图片
+        image_form = ImageForm(request.POST, request.FILES)
+        if image_form.is_valid():
+            image_form.save()
             # Get the current instance object to display in the template
-            img_obj = form.instance
+            img_obj = image_form.instance
+
+            #################################################################
+            # --------------------------------------------------------------#
+            #################################################################
+            #####---------1. 改文件名---------######
+            # 获取文件后缀名
+            image_name = image_form['image_name'].value()
+            suffix = str(image_name).split('.')[1]
+
+            # 获取日期并修改日期的写法
+            image_created_time_reformatted = str(image_form['created_time'].value()).replace(':','_').replace(' ','_')
+
+            # 给图片文件重新命名
+            image_new_name = image_created_time_reformatted + '_' + str(random.randint(1, 10000)) + '.' + suffix
+
+            # 更改已经保存图片文件的名字为新名字
+            image_old_path = os.path.join(image_src, str(image_form['image_name'].value()))
+            image_new_path = os.path.join(image_src, image_new_name)
+
+            os.rename(image_old_path, image_new_path)
+
+            #####---------2. 改数据库中的图片文件的路径和文件名---------######
+            image = Image.objects.last()
+            image.image_name = image_new_name
+            image.save()
+            #################################################################
+            # --------------------------------------------------------------#
+            #################################################################
 
 
             # Read text in the image
-            img_src = '.' + img_obj.image.url
-
-            img = cv2.imread(img_src)
-            text_in_img = pytesseract.image_to_string(img)
+            img = cv2.imread(image_new_path)
+            text_in_img_or_video = pytesseract.image_to_string(img)
 
             # 需要传递给模板的对象
             context = {
@@ -623,19 +680,103 @@ def input(request, id):
                 'last_reference': last_reference,
                 'last_english_text': last_english_text,
                 'english_styled': english_styled,
+                'last_english_text_video': last_english_text_video,
+                'last_english_text_image': last_english_text_image,
 
                 # Text in Image
-                'text_in_img': text_in_img,
-                'form': form,
+                'text_in_img_or_video': text_in_img_or_video,
+                'image_form': image_form,
                 'img_obj': img_obj,
+                'image': image,
+                'image_new_path': image_new_path,
+            }
+            return render(request, 'input.html', context)
+
+        # 如果上传的是：视频
+        video_form = VideoForm(request.POST, request.FILES)
+        if video_form.is_valid():
+
+            # 执行：写入数据库 & 存储文件到硬盘
+            video_form.save()
+
+            # Get the current instance object to display in the template
+            video_obj = video_form.instance
+
+            #################################################################
+            # --------------------------------------------------------------#
+            #################################################################
+            #####---------1. 改文件名---------######
+            # 获取文件后缀名
+            video_name = video_form['video_name'].value()
+            suffix = str(video_name).split('.')[1]
+
+            # 获取日期并修改日期的写法
+            video_created_time_reformatted = str(video_form['created_time'].value()).replace(':','_').replace(' ','_')
+
+            # 给视频文件重新命名
+            video_new_name = video_created_time_reformatted + '_' + str(random.randint(1, 10000)) + '.' + suffix
+
+            video_old_path = os.path.join(video_src, str(video_form['video_name'].value()))
+            video_new_path = os.path.join(video_src, video_new_name)
+
+            # 更改已经保存视频文件的名字为新名字
+            os.rename (video_old_path, video_new_path)
+
+
+            ###---------------- 2. 提取音频--------------- ###
+            audio_extracted = video_new_name + '.wav'
+            audio_extracted_url = audio_src3 + audio_extracted
+            audioclip = AudioFileClip(video_new_path)
+            audioclip.write_audiofile(audio_extracted_url)
+
+            ###-------------- 3. 将音频转化成文本------------------ ###
+            # 创建Recognizer实例
+            r = sr.Recognizer()
+            # 打开音频文件
+            with sr.AudioFile(audio_extracted_url) as audio_file:
+                audio_data = r.record(audio_file)
+                # 使用CMU Sphinx语音识别服务进行转换:recognize_sphinx
+                text_in_img_or_video = r.recognize_sphinx(audio_data, language='en-US')
+                print(text_in_img_or_video)
+
+            ###-------------- 将上述1-3信息存入数据库------------------ ###
+            video = Video.objects.last()
+            video.video_name = video_new_name
+            video.video_to_mp3 = audio_extracted
+            video.video_to_mp3_to_text = text_in_img_or_video
+
+            video.save()
+            #################################################################
+            # --------------------------------------------------------------#
+            #################################################################
+
+            # -------------------需要传递给模板的对象--------------------------#
+            context = {
+                'tag_dict': tag_dict,
+                'all_tag_list': all_tag_list,
+                'reference_range': reference_range,
+                'source': source,
+                'last_reference': last_reference,
+                'last_english_text': last_english_text,
+                'english_styled': english_styled,
+                'last_english_text_video': last_english_text_video,
+                'last_english_text_image': last_english_text_image,
+
+                'video_obj': video_obj,
+                'video_new_path': video_new_path,
+                'text_in_img_or_video': text_in_img_or_video,
+                'video': video,
             }
             return render(request, 'input.html', context)
 
 
 
     else:
-        form = ImageForm()
-        text_in_img = "None or failed"
+        image_form = ImageForm()
+        video_form = VideoForm()
+        text_in_img_or_video = "None or failed"
+
+
         # 需要传递给模板的对象
         context = {
             'tag_dict': tag_dict,
@@ -645,10 +786,14 @@ def input(request, id):
             'last_reference': last_reference,
             'last_english_text': last_english_text,
             'english_styled': english_styled,
+            'last_english_text_video': last_english_text_video,
+            'last_english_text_image': last_english_text_image,
 
-            # Text in Image
-            'text_in_img': text_in_img,
-            'form': form,
+            # Text in Image or video
+            'text_in_img_or_video': text_in_img_or_video,
+            'image_form': image_form,
+
+            'video_form': video_form,
         }
         return render(request, 'input.html', context)
 
@@ -767,13 +912,35 @@ def submit(request):
     # english.category = category_obj
     english.reference = reference_obj
 
+    english.created_time = created_time
+
+    video_input = request.POST.get('video_input')
+    if (video_input):
+        # 写入对应的Video的ID
+        video = Video.objects.last()
+        english.video_id = video.id
+        # 写入English数据库
+        english.save()
+        # 写入Video数据库
+        video.english_id = english.id
+        video.save()
+
+    image_input = request.POST.get('image_input')
+    if (image_input):
+        # 写入对应的image的ID
+        image = Image.objects.last()
+        english.image_id = image.id
+        # 写入English数据库
+        english.save()
+        # 写入Image数据库
+        image.english_id = english.id
+        image.save()
+
 
    # english.created_time = created_time
    # english.modified_time = modified_time
    # english.author = author
 
-    # 写入数据库
-    english.save()
 
     '''
     # 把English和tag关系写入数据库
@@ -1002,6 +1169,15 @@ def update(request, english_id):
     single_english_note = english.text_highlight(english)
     english_dict.update(single_english_note)
 
+    # 获取对应的Image实例
+    image = Image()
+    if english.image_id:
+        image = get_object_or_404(Image, english_id = english.id)
+    # 获取对应的Video实例
+    video = Video()
+    if english.video_id:
+        video = get_object_or_404(Video, english_id = english.id)
+
     # 获取对应的Reference实例
     reference_current = english.reference
 
@@ -1070,6 +1246,9 @@ def update(request, english_id):
         'reference_range': reference_range,
 
         'element2':element2,
+
+        'image': image,
+        'video': video,
 
     }
 

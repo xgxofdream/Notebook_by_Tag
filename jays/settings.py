@@ -17,8 +17,8 @@ import os
 '''
 # 全局变量
 '''
-# app = 'english'
-app = 'intelligent_life'
+app = 'english'
+# app = 'intelligent_life'
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -93,7 +93,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': app,
         'USER': 'root',
-        'PASSWORD': '123456',
+        'PASSWORD': '',
         'HOST': 'localhost',
         'PORT': '3306',
     }
