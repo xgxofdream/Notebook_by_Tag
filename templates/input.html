@@ -108,10 +108,12 @@
 
   {% if video.id %}
     <input type="hidden" name="video_input" value="{{ video.id }}"/>
+  {% else %}<input type="hidden" name="text_input" value="text_input"/>
   {% endif %}
 
   {% if image.id %}
     <input type="hidden" name="image_input" value="{{ image.id }}"/>
+  {% else %}<input type="hidden" name="text_input" value="text_input"/>
   {% endif %}
 
     <br>

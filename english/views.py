@@ -696,7 +696,7 @@ def input(request, id):
         video_form = VideoForm(request.POST, request.FILES)
         if video_form.is_valid():
 
-            # 执行：写入数据库 & 存储文件到硬盘
+            # video_form.save()执行（1）写入数据库 & （2）存储文件到硬盘
             video_form.save()
 
             # Get the current instance object to display in the template
@@ -936,6 +936,10 @@ def submit(request):
         image.english_id = english.id
         image.save()
 
+    text_input = request.POST.get('text_input')
+    if (text_input):
+        # 写入English数据库
+        english.save()
 
    # english.created_time = created_time
    # english.modified_time = modified_time
