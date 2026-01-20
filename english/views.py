@@ -1404,7 +1404,11 @@ def submit_update(request, english_id):
     '''
     # 更新English的音频文件，并把音频文件的名字记入数据库
     '''
-    # 创建目录
+    # 删除 audio files
+    # 得到文件所在的目录和删除audio files
+    folder_location_english = audio_src + str(source.id) + '/'
+    english.delete_audio('del_english', english, folder_location_english)
+    # 创建目录和audio files
     folder_location_english = audio_src + str(source.id) + '/'
     english.create_folder(folder_location_english)
     # 更新音频
